@@ -7,10 +7,13 @@ import {
   ShieldCheck,
   Sun,
   Moon,
-  X
+  X,
+  Users,
+  LogOut
 } from 'lucide-react';
+import type { UserAccount, Tenant } from '../lib/types';
 
-export type NavTab = 'overview' | 'appointments' | 'dispatches' | 'telemetry' | 'architecture';
+export type NavTab = 'overview' | 'appointments' | 'dispatches' | 'telemetry' | 'architecture' | 'staff';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -24,6 +27,9 @@ interface SidebarProps {
   totalJobs: number;
   isMobileOpen: boolean;
   onCloseMobile: () => void;
+  currentUser: UserAccount;
+  onLogout: () => void;
+  tenants: Tenant[];
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -37,8 +43,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   totalAppts,
   totalJobs,
   isMobileOpen,
-  onCloseMobile
+  onCloseMobile,
+  currentUser,
+  onLogout,
+  tenants
 }) => {
+  const isAdmin = currentUser.role === 'platform_admin';
+  const assignedTenant = tenants.find((t) => t.id === currentUser.tenant_id);
   const handleItemClick = (tab: NavTab) => {
     onTabChange(tab);
     onCloseMobile();
@@ -132,6 +143,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span>Architecture & DB</span>
               </div>
             </button>
+
+            {/* Staff & Team Management (Only visible to Admin) */}
+            {isAdmin && (
+              <button
+                className={`nav-link ${activeTab === 'staff' ? 'active' : ''}`}
+                onClick={() => handleItemClick('staff')}
+                id="nav-tab-staff"
+              >
+                <div className="nav-link-content">
+                  <Users size={18} />
+                  <span>Staff & Team</span>
+                </div>
+                <span
+                  className="nav-badge"
+                  style={{
+                    background: 'var(--primary-soft)',
+                    color: 'var(--primary)',
+                    fontWeight: 700,
+                    fontSize: '0.64rem'
+                  }}
+                >
+                  Admin
+                </span>
+              </button>
+            )}
           </nav>
         </div>
 
@@ -141,10 +177,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             className="db-pill"
             onClick={() => {
-              onOpenConfig();
+              if (isAdmin) {
+                onOpenConfig();
+              }
               onCloseMobile();
             }}
-            title="Click to view or connect live Supabase PostgreSQL"
+            title={isAdmin ? 'Click to view or connect live Supabase PostgreSQL' : 'Database managed by Platform Admin'}
             id="sidebar-db-pill"
           >
             <span className={`pulse-dot ${isLiveSupabase ? 'green' : 'amber'}`} />
@@ -153,46 +191,89 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {isLiveSupabase ? 'Supabase Live' : 'Local Demo DB'}
               </span>
               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                {isLiveSupabase ? `${latencyMs ?? 42}ms latency` : 'Click to link cloud'}
+                {isAdmin
+                  ? isLiveSupabase ? `${latencyMs ?? 42}ms latency` : 'Click to link cloud'
+                  : 'Managed by Admin'}
               </span>
             </div>
           </button>
 
-          {/* User Profile & Theme Switcher */}
+          {/* User Profile, Theme Switcher & Logout */}
           <div className="theme-user-row">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
               <div
                 style={{
                   width: 32,
                   height: 32,
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+                  background: isAdmin
+                    ? 'linear-gradient(135deg, #3b82f6, #06b6d4)'
+                    : assignedTenant?.industry === 'medical_clinic'
+                    ? 'linear-gradient(135deg, #0ea5e9, #38bdf8)'
+                    : 'linear-gradient(135deg, #f59e0b, #fbbf24)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#ffffff',
                   fontWeight: 700,
-                  fontSize: '0.8rem'
+                  fontSize: '0.8rem',
+                  flexShrink: 0
                 }}
               >
-                SC
+                {currentUser.full_name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join('')}
               </div>
-              <div style={{ lineHeight: 1.2 }}>
-                <strong style={{ fontSize: '0.82rem', display: 'block', color: 'var(--text-main)' }}>
-                  Sarah Chen
+              <div style={{ lineHeight: 1.2, minWidth: 0 }}>
+                <strong
+                  style={{
+                    fontSize: '0.82rem',
+                    display: 'block',
+                    color: 'var(--text-main)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                >
+                  {currentUser.full_name}
                 </strong>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Platform Admin</span>
+                <span
+                  style={{
+                    fontSize: '0.68rem',
+                    color: 'var(--text-muted)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: 'block'
+                  }}
+                >
+                  {isAdmin ? 'Platform Admin' : `${assignedTenant?.name.split(' ')[0] || 'Clinic'} Staff`}
+                </span>
               </div>
             </div>
 
-            <button
-              className="theme-toggle-btn"
-              onClick={onToggleTheme}
-              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-              id="theme-toggle-btn"
-            >
-              {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              <button
+                className="theme-toggle-btn"
+                onClick={onToggleTheme}
+                title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                id="theme-toggle-btn"
+              >
+                {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
+              </button>
+
+              <button
+                className="theme-toggle-btn"
+                onClick={onLogout}
+                title="Sign out / Switch account"
+                id="sidebar-logout-btn"
+                style={{ color: 'var(--danger-color)' }}
+              >
+                <LogOut size={15} />
+              </button>
+            </div>
           </div>
         </div>
       </aside>

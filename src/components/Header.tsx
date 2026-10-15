@@ -1,6 +1,7 @@
 import React from 'react';
-import { Search, Plus, Menu } from 'lucide-react';
+import { Search, Plus, Menu, Stethoscope, Wrench } from 'lucide-react';
 import type { NavTab } from './Sidebar';
+import type { UserAccount, Tenant } from '../lib/types';
 
 interface HeaderProps {
   activeTab: NavTab;
@@ -8,6 +9,8 @@ interface HeaderProps {
   onSearchChange: (q: string) => void;
   onOpenAddBusiness: () => void;
   onToggleMobileMenu: () => void;
+  currentUser: UserAccount;
+  assignedTenant?: Tenant;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -15,19 +18,27 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   onSearchChange,
   onOpenAddBusiness,
-  onToggleMobileMenu
+  onToggleMobileMenu,
+  currentUser,
+  assignedTenant
 }) => {
+  const isAdmin = currentUser.role === 'platform_admin';
+
   const getTabTitles = () => {
     switch (activeTab) {
       case 'appointments':
         return {
           title: 'Patient Appointments',
-          subtitle: 'Daily clinic schedule, doctor itinerary & clinical triage'
+          subtitle: isAdmin
+            ? 'Daily clinic schedule, doctor itinerary & clinical triage'
+            : `${assignedTenant?.name || 'Clinic'} • Daily Patient Appointments & Consultations`
         };
       case 'dispatches':
         return {
           title: 'Field Work Orders',
-          subtitle: 'Emergency trade dispatches, technician routes & quotes'
+          subtitle: isAdmin
+            ? 'Emergency trade dispatches, technician routes & quotes'
+            : `${assignedTenant?.name || 'Service'} • Field Work Orders & Tech Dispatches`
         };
       case 'telemetry':
         return {
@@ -39,10 +50,17 @@ export const Header: React.FC<HeaderProps> = ({
           title: 'Architecture & Database',
           subtitle: 'Technical design, PostgreSQL schema, RLS policies & roadmap'
         };
+      case 'staff':
+        return {
+          title: 'Staff & Team Management',
+          subtitle: 'Provision staff accounts, assign clinic practices & manage permissions'
+        };
       default:
         return {
-          title: 'Platform Overview',
-          subtitle: 'Monitoring medical clinics and commercial trade services'
+          title: isAdmin ? 'Platform Overview' : `${assignedTenant?.name || 'Business'} Portal`,
+          subtitle: isAdmin
+            ? 'Monitoring medical clinics and commercial trade services'
+            : 'Operational dashboard & autonomous AI call telemetry'
         };
     }
   };
@@ -74,22 +92,34 @@ export const Header: React.FC<HeaderProps> = ({
           <Search size={15} className="search-icon-pos" />
           <input
             type="text"
-            placeholder="Search records, clinics..."
+            placeholder={isAdmin ? 'Search records, clinics...' : 'Search records...'}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             id="global-search-input"
           />
         </div>
 
-        {/* Single Primary Action Button */}
-        <button
-          className="btn-clean-primary"
-          onClick={onOpenAddBusiness}
-          id="btn-add-business"
-        >
-          <Plus size={16} />
-          <span>New Business</span>
-        </button>
+        {/* Primary Action Button: Only Admin has authority to onboard businesses */}
+        {isAdmin ? (
+          <button
+            className="btn-clean-primary"
+            onClick={onOpenAddBusiness}
+            id="btn-add-business"
+          >
+            <Plus size={16} />
+            <span>New Business</span>
+          </button>
+        ) : (
+          <div
+            className={`badge-clean ${
+              assignedTenant?.industry === 'medical_clinic' ? 'badge-medical' : 'badge-service'
+            }`}
+            style={{ padding: '7px 12px', fontSize: '0.78rem', gap: 6 }}
+          >
+            {assignedTenant?.industry === 'medical_clinic' ? <Stethoscope size={14} /> : <Wrench size={14} />}
+            <span>{assignedTenant?.name.split(',')[0] || 'Scoped Staff Access'}</span>
+          </div>
+        )}
       </div>
     </header>
   );

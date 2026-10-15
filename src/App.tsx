@@ -11,6 +11,9 @@ import { BusinessDetailDrawer } from './components/BusinessDetailDrawer';
 import { ArchitectureModal } from './components/ArchitectureModal';
 import { SupabaseConfigModal } from './components/SupabaseConfigModal';
 import { AddBusinessModal } from './components/AddBusinessModal';
+import { LoginView } from './components/LoginView';
+import { StaffManagementView } from './components/StaffManagementView';
+import { AddStaffModal } from './components/AddStaffModal';
 import { api } from './lib/api';
 import { testSupabaseConnection } from './lib/supabase';
 import type {
@@ -19,11 +22,21 @@ import type {
   Appointment,
   ServiceJob,
   AIActivityLog,
-  DashboardMetrics
+  DashboardMetrics,
+  UserAccount
 } from './lib/types';
 import { CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
+    try {
+      const stored = localStorage.getItem('isectai_current_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [activeTab, setActiveTab] = useState<NavTab>('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -34,6 +47,7 @@ export const App: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [serviceJobs, setServiceJobs] = useState<ServiceJob[]>([]);
   const [aiLogs, setAiLogs] = useState<AIActivityLog[]>([]);
+  const [users, setUsers] = useState<UserAccount[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     totalBusinesses: 0,
     activeMedicalClinics: 0,
@@ -49,6 +63,7 @@ export const App: React.FC = () => {
   const [showArchitectureModal, setShowArchitectureModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAddBusinessModal, setShowAddBusinessModal] = useState(false);
+  const [showAddStaffModal, setShowAddStaffModal] = useState(false);
   const [isLiveSupabase, setIsLiveSupabase] = useState(false);
   const [latencyMs, setLatencyMs] = useState<number | undefined>(undefined);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -65,12 +80,13 @@ export const App: React.FC = () => {
     setIsLiveSupabase(testResult.success);
     setLatencyMs(testResult.latencyMs);
 
-    const [tenantsRes, agentsRes, apptsRes, jobsRes, logsRes, metricsRes] = await Promise.all([
+    const [tenantsRes, agentsRes, apptsRes, jobsRes, logsRes, usersRes, metricsRes] = await Promise.all([
       api.getTenants(),
       api.getAIAgents(),
       api.getAppointments(),
       api.getServiceJobs(),
       api.getAILogs(),
+      api.getUsers(),
       api.getDashboardMetrics()
     ]);
 
@@ -79,6 +95,7 @@ export const App: React.FC = () => {
     setAppointments(apptsRes.data);
     setServiceJobs(jobsRes.data);
     setAiLogs(logsRes.data);
+    setUsers(usersRes.data);
     setMetrics(metricsRes);
   }, []);
 
@@ -92,6 +109,38 @@ export const App: React.FC = () => {
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  const handleLogin = (user: UserAccount) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem('isectai_current_user', JSON.stringify(user));
+    } catch (e) {
+      console.warn(e);
+    }
+
+    if (user.role === 'business_staff') {
+      const userTenant = tenants.find((t) => t.id === user.tenant_id);
+      if (userTenant?.industry === 'medical_clinic') {
+        setActiveTab('appointments');
+      } else {
+        setActiveTab('dispatches');
+      }
+      showToast(`Signed in as ${user.full_name} (${userTenant?.name || 'Staff Access'})`);
+    } else {
+      setActiveTab('overview');
+      showToast(`Welcome back, ${user.full_name} (Platform Admin)`);
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('isectai_current_user');
+    } catch (e) {
+      console.warn(e);
+    }
+    showToast('Signed out successfully.');
   };
 
   const handleSimulateCall = async (tenant: Tenant, e?: React.MouseEvent) => {
@@ -110,6 +159,13 @@ export const App: React.FC = () => {
     showToast(`🎉 "${created.name}" onboarded successfully!`);
   };
 
+  const handleAddStaff = async (newUserData: Omit<UserAccount, 'id' | 'created_at'>) => {
+    const created = await api.createStaffUser(newUserData);
+    const updatedUsers = await api.getUsers();
+    setUsers(updatedUsers.data);
+    showToast(`🎉 Staff account created for ${created.full_name}!`);
+  };
+
   const handleTabChange = (tab: NavTab) => {
     if (tab === 'architecture') {
       setShowArchitectureModal(true);
@@ -119,6 +175,41 @@ export const App: React.FC = () => {
     setIsMobileMenuOpen(false);
   };
 
+  // If not logged in, render the Login Screen
+  if (!currentUser) {
+    return (
+      <>
+        <LoginView onLogin={handleLogin} theme={theme} onToggleTheme={toggleTheme} />
+        {toastMessage && (
+          <div className="clean-toast" id="interactive-toast">
+            <CheckCircle2 size={16} color="#34d399" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  const isStaff = currentUser.role === 'business_staff';
+  const assignedTenant = tenants.find((t) => t.id === currentUser.tenant_id);
+
+  // Scoped data for staff accounts
+  const visibleAppointments = isStaff && currentUser.tenant_id
+    ? appointments.filter((a) => a.tenant_id === currentUser.tenant_id)
+    : appointments;
+
+  const visibleServiceJobs = isStaff && currentUser.tenant_id
+    ? serviceJobs.filter((j) => j.tenant_id === currentUser.tenant_id)
+    : serviceJobs;
+
+  const visibleTenants = isStaff && currentUser.tenant_id
+    ? tenants.filter((t) => t.id === currentUser.tenant_id)
+    : tenants;
+
+  const visibleAiLogs = isStaff && currentUser.tenant_id
+    ? aiLogs.filter((l) => l.tenant_id === currentUser.tenant_id)
+    : aiLogs;
+
   return (
     <div className="app-shell" id="app-root-shell">
       {/* Left Sidebar (Desktop permanent, Mobile slide-in drawer) */}
@@ -127,13 +218,22 @@ export const App: React.FC = () => {
         onTabChange={handleTabChange}
         isLiveSupabase={isLiveSupabase}
         latencyMs={latencyMs}
-        onOpenConfig={() => setShowConfigModal(true)}
+        onOpenConfig={() => {
+          if (currentUser.role === 'platform_admin') {
+            setShowConfigModal(true);
+          } else {
+            showToast('🔒 Access restricted: Only Platform Admin can edit database configuration.');
+          }
+        }}
         theme={theme}
         onToggleTheme={toggleTheme}
-        totalAppts={appointments.length}
-        totalJobs={serviceJobs.length}
+        totalAppts={visibleAppointments.length}
+        totalJobs={visibleServiceJobs.length}
         isMobileOpen={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        tenants={tenants}
       />
 
       {/* Main Content Canvas */}
@@ -143,8 +243,16 @@ export const App: React.FC = () => {
           activeTab={activeTab}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onOpenAddBusiness={() => setShowAddBusinessModal(true)}
+          onOpenAddBusiness={() => {
+            if (currentUser.role === 'platform_admin') {
+              setShowAddBusinessModal(true);
+            } else {
+              showToast('🔒 Only Platform Admin has permission to onboard new businesses.');
+            }
+          }}
           onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          currentUser={currentUser}
+          assignedTenant={assignedTenant}
         />
 
         {/* Canvas Body */}
@@ -154,10 +262,10 @@ export const App: React.FC = () => {
             <>
               <MetricCards metrics={metrics} />
               <BusinessList
-                tenants={tenants}
+                tenants={visibleTenants}
                 agents={agents}
-                appointments={appointments}
-                serviceJobs={serviceJobs}
+                appointments={visibleAppointments}
+                serviceJobs={visibleServiceJobs}
                 searchQuery={searchQuery}
                 onSelectTenant={(t) => setSelectedTenant(t)}
                 onSimulateCall={handleSimulateCall}
@@ -165,11 +273,11 @@ export const App: React.FC = () => {
             </>
           )}
 
-          {/* TAB 2: APPOINTMENTS WITH INTERACTIVE CALENDAR SCHEDULE (sample.jpg, sample5.jpg) */}
+          {/* TAB 2: APPOINTMENTS WITH INTERACTIVE CALENDAR SCHEDULE */}
           {activeTab === 'appointments' && (
             <AppointmentsView
-              appointments={appointments}
-              tenants={tenants}
+              appointments={visibleAppointments}
+              tenants={visibleTenants}
               onSelectTenant={(t) => setSelectedTenant(t)}
               onSimulateCall={(t) => handleSimulateCall(t)}
             />
@@ -178,15 +286,25 @@ export const App: React.FC = () => {
           {/* TAB 3: FIELD DISPATCHES */}
           {activeTab === 'dispatches' && (
             <DispatchesView
-              serviceJobs={serviceJobs}
-              tenants={tenants}
+              serviceJobs={visibleServiceJobs}
+              tenants={visibleTenants}
               onSelectTenant={(t) => setSelectedTenant(t)}
             />
           )}
 
           {/* TAB 4: AI TELEMETRY */}
           {activeTab === 'telemetry' && (
-            <AITelemetryView logs={aiLogs} tenants={tenants} />
+            <AITelemetryView logs={visibleAiLogs} tenants={visibleTenants} />
+          )}
+
+          {/* TAB 5: STAFF & TEAM MANAGEMENT (Admin Only) */}
+          {activeTab === 'staff' && currentUser.role === 'platform_admin' && (
+            <StaffManagementView
+              users={users}
+              tenants={tenants}
+              onOpenAddStaff={() => setShowAddStaffModal(true)}
+              currentUser={currentUser}
+            />
           )}
         </div>
       </main>
@@ -209,7 +327,7 @@ export const App: React.FC = () => {
         <ArchitectureModal onClose={() => setShowArchitectureModal(false)} />
       )}
 
-      {/* Supabase Connection Modal */}
+      {/* Supabase Connection Modal (Admin only) */}
       {showConfigModal && (
         <SupabaseConfigModal
           onClose={() => setShowConfigModal(false)}
@@ -220,11 +338,20 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Add Business Modal */}
+      {/* Add Business Modal (Admin only) */}
       {showAddBusinessModal && (
         <AddBusinessModal
           onClose={() => setShowAddBusinessModal(false)}
           onAdd={handleAddTenant}
+        />
+      )}
+
+      {/* Add Staff Modal (Admin only) */}
+      {showAddStaffModal && (
+        <AddStaffModal
+          tenants={tenants}
+          onClose={() => setShowAddStaffModal(false)}
+          onAddStaff={handleAddStaff}
         />
       )}
 

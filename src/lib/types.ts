@@ -1,6 +1,21 @@
 export type BusinessIndustry = 'medical_clinic' | 'service_business';
 export type TenantStatus = 'active' | 'onboarding' | 'paused' | 'suspended';
 export type SubscriptionTier = 'starter' | 'growth' | 'enterprise';
+export type UserRole = 'platform_admin' | 'business_staff';
+
+export interface UserAccount {
+  id: string;
+  tenant_id: string | null; // null for platform_admin, UUID for business_staff
+  email: string;
+  password?: string;
+  full_name: string;
+  role: UserRole;
+  phone?: string;
+  title?: string;
+  is_active: boolean;
+  avatar_url?: string;
+  created_at: string;
+}
 
 export interface TenantBranding {
   primary_color?: string;

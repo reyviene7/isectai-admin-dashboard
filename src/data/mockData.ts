@@ -1,4 +1,4 @@
-import type { Tenant, AIAgent, Contact, Appointment, ServiceJob, AIActivityLog } from '../lib/types';
+import type { Tenant, AIAgent, Contact, Appointment, ServiceJob, AIActivityLog, UserAccount } from '../lib/types';
 
 export const INITIAL_TENANTS: Tenant[] = [
   {
@@ -356,5 +356,56 @@ export const INITIAL_AI_LOGS: AIActivityLog[] = [
     summary: 'Commercial kitchen emergency: Walk-in cooler temperature alert. AI captured equipment model and dispatched Tyler Vance with 45-min ETA.',
     transcript_snippet: 'Caller: "Our walk-in is up to 50 degrees, we have $14,000 in seafood inventory at risk!" -> AI: "Understood, Jason. I am dispatching our master refrigeration tech Tyler Vance immediately under Emergency Priority Code 1..."',
     created_at: new Date(Date.now() - 60 * 60000).toISOString()
+  }
+];
+
+export const INITIAL_USERS: UserAccount[] = [
+  {
+    id: 'u0000000-0000-4000-8000-000000000000',
+    tenant_id: null,
+    email: 'admin@isectai.internal',
+    password: 'password123',
+    full_name: 'Sarah Chen',
+    role: 'platform_admin',
+    title: 'Platform Super Admin & AI Architect',
+    phone: '+1 (212) 555-0100',
+    is_active: true,
+    created_at: new Date(Date.now() - 90 * 86400000).toISOString()
+  },
+  {
+    id: 'u1111111-1111-4111-8111-111111111111',
+    tenant_id: 'a1111111-1111-4111-8111-111111111111',
+    email: 'staff@apexdental.com',
+    password: 'password123',
+    full_name: 'Elena Ramos',
+    role: 'business_staff',
+    title: 'Clinic Front-Desk & Triage Coordinator',
+    phone: '+1 (212) 555-0145',
+    is_active: true,
+    created_at: new Date(Date.now() - 30 * 86400000).toISOString()
+  },
+  {
+    id: 'u2222222-2222-4222-8222-222222222222',
+    tenant_id: 'b2222222-2222-4222-8222-222222222222',
+    email: 'staff@pulsepoint.org',
+    password: 'password123',
+    full_name: 'Dr. Julian Vance',
+    role: 'business_staff',
+    title: 'Clinical Director & Cardiologist',
+    phone: '+1 (212) 555-0190',
+    is_active: true,
+    created_at: new Date(Date.now() - 25 * 86400000).toISOString()
+  },
+  {
+    id: 'u3333333-3333-4333-8333-333333333333',
+    tenant_id: 'c3333333-3333-4333-8333-333333333333',
+    email: 'staff@voltflow.com',
+    password: 'password123',
+    full_name: 'Marcus Vance',
+    role: 'business_staff',
+    title: 'Field Service Dispatch Supervisor',
+    phone: '+1 (718) 555-0925',
+    is_active: true,
+    created_at: new Date(Date.now() - 20 * 86400000).toISOString()
   }
 ];

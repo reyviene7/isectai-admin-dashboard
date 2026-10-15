@@ -6,7 +6,8 @@ import type {
   AIAgent,
   AIActivityLog,
   Contact,
-  DashboardMetrics
+  DashboardMetrics,
+  UserAccount
 } from './types';
 import {
   INITIAL_TENANTS,
@@ -14,8 +15,22 @@ import {
   INITIAL_SERVICE_JOBS,
   INITIAL_AI_AGENTS,
   INITIAL_AI_LOGS,
-  INITIAL_CONTACTS
+  INITIAL_CONTACTS,
+  INITIAL_USERS
 } from '../data/mockData';
+
+const loadStoredUsers = (): UserAccount[] => {
+  try {
+    const raw = localStorage.getItem('isectai_users');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.warn('Failed to parse local stored users:', e);
+  }
+  return [...INITIAL_USERS];
+};
 
 // Local in-memory state fallback when Supabase is offline or unconfigured
 let localTenants: Tenant[] = [...INITIAL_TENANTS];
@@ -24,6 +39,15 @@ let localServiceJobs: ServiceJob[] = [...INITIAL_SERVICE_JOBS];
 let localAIAgents: AIAgent[] = [...INITIAL_AI_AGENTS];
 let localAILogs: AIActivityLog[] = [...INITIAL_AI_LOGS];
 let localContacts: Contact[] = [...INITIAL_CONTACTS];
+let localUsers: UserAccount[] = loadStoredUsers();
+
+const saveUsers = () => {
+  try {
+    localStorage.setItem('isectai_users', JSON.stringify(localUsers));
+  } catch (e) {
+    console.warn('Failed to save users to localStorage:', e);
+  }
+};
 
 export interface FetchResult<T> {
   data: T;
@@ -349,5 +373,76 @@ export const api = {
       totalTokensConsumed: totalTokens + 1845000,
       aiAutomationRate
     };
+  },
+
+  async getUsers(): Promise<FetchResult<UserAccount[]>> {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && data && data.length > 0) {
+          return { data, source: 'supabase_cloud' };
+        }
+      } catch (err) {
+        console.warn('Supabase users query failed:', err);
+      }
+    }
+    return { data: localUsers, source: 'local_demo' };
+  },
+
+  async createStaffUser(newUserData: Omit<UserAccount, 'id' | 'created_at'>): Promise<UserAccount> {
+    const newUser: UserAccount = {
+      ...newUserData,
+      id: `u${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 6)}-4000-8000-${Math.random().toString(16).slice(2, 14)}`,
+      created_at: new Date().toISOString(),
+      is_active: true
+    };
+
+    localUsers = [newUser, ...localUsers];
+    saveUsers();
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('users').insert([
+          {
+            id: newUser.id,
+            tenant_id: newUser.tenant_id,
+            email: newUser.email,
+            full_name: newUser.full_name,
+            role: newUser.role,
+            phone: newUser.phone,
+            is_active: newUser.is_active
+          }
+        ]);
+      } catch (err) {
+        console.warn('Supabase create user failed:', err);
+      }
+    }
+
+    return newUser;
+  },
+
+  async login(email: string, password?: string): Promise<{ success: boolean; user?: UserAccount; error?: string }> {
+    const cleanEmail = email.trim().toLowerCase();
+    const user = localUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+
+    if (!user) {
+      return { success: false, error: 'No account registered with this email.' };
+    }
+
+    if (!user.is_active) {
+      return { success: false, error: 'Account is deactivated. Contact platform administrator.' };
+    }
+
+    if (password && user.password && user.password !== password) {
+      return { success: false, error: 'Invalid password. Check your credentials.' };
+    }
+
+    return { success: true, user };
   }
 };
