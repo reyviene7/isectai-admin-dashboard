@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Lock,
   Mail,
@@ -28,6 +28,19 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, theme, onToggleTh
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [forgotNotice, setForgotNotice] = useState(false);
+
+  // Guarantee 0 padding and no scrollbars on body while login screen is mounted
+  useEffect(() => {
+    const originalPadding = document.body.style.padding;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.padding = '0';
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.padding = originalPadding;
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   const handleFormLogin = async (e: React.FormEvent) => {
     e.preventDefault();
