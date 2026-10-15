@@ -27,6 +27,7 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [agents, setAgents] = useState<AIAgent[]>([]);
@@ -85,7 +86,6 @@ export const App: React.FC = () => {
     loadData();
   }, [loadData]);
 
-  // Sync theme attribute to document body
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
@@ -100,7 +100,7 @@ export const App: React.FC = () => {
     await loadData();
 
     const isMedical = tenant.industry === 'medical_clinic';
-    const detail = isMedical ? 'New Appointment' : 'Emergency Dispatch';
+    const detail = isMedical ? 'New Clinical Appointment' : 'Emergency Field Dispatch';
     showToast(`⚡ AI Auto-Booked: ${detail} for ${tenant.name}`);
   };
 
@@ -116,11 +116,12 @@ export const App: React.FC = () => {
     } else {
       setActiveTab(tab);
     }
+    setIsMobileMenuOpen(false);
   };
 
   return (
     <div className="app-shell" id="app-root-shell">
-      {/* Left Sidebar matching sample10.jpg & sample1.jpg */}
+      {/* Left Sidebar (Desktop permanent, Mobile slide-in drawer) */}
       <Sidebar
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -131,44 +132,50 @@ export const App: React.FC = () => {
         onToggleTheme={toggleTheme}
         totalAppts={appointments.length}
         totalJobs={serviceJobs.length}
+        isMobileOpen={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Main Content Canvas */}
       <main className="main-canvas" id="app-main-canvas">
-        {/* Top Header Bar with Search & Single Action Button */}
+        {/* Top Header Bar with Mobile Menu Toggle & Search */}
         <Header
           activeTab={activeTab}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onOpenAddBusiness={() => setShowAddBusinessModal(true)}
+          onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         />
 
         {/* Canvas Body */}
         <div className="canvas-body">
-          {/* Streamlined KPI Cards */}
-          <MetricCards metrics={metrics} />
-
-          {/* Active Tab View */}
+          {/* TAB 1: OVERVIEW */}
           {activeTab === 'overview' && (
-            <BusinessList
-              tenants={tenants}
-              agents={agents}
-              appointments={appointments}
-              serviceJobs={serviceJobs}
-              searchQuery={searchQuery}
-              onSelectTenant={(t) => setSelectedTenant(t)}
-              onSimulateCall={handleSimulateCall}
-            />
+            <>
+              <MetricCards metrics={metrics} />
+              <BusinessList
+                tenants={tenants}
+                agents={agents}
+                appointments={appointments}
+                serviceJobs={serviceJobs}
+                searchQuery={searchQuery}
+                onSelectTenant={(t) => setSelectedTenant(t)}
+                onSimulateCall={handleSimulateCall}
+              />
+            </>
           )}
 
+          {/* TAB 2: APPOINTMENTS WITH INTERACTIVE CALENDAR SCHEDULE (sample.jpg, sample5.jpg) */}
           {activeTab === 'appointments' && (
             <AppointmentsView
               appointments={appointments}
               tenants={tenants}
               onSelectTenant={(t) => setSelectedTenant(t)}
+              onSimulateCall={(t) => handleSimulateCall(t)}
             />
           )}
 
+          {/* TAB 3: FIELD DISPATCHES */}
           {activeTab === 'dispatches' && (
             <DispatchesView
               serviceJobs={serviceJobs}
@@ -177,6 +184,7 @@ export const App: React.FC = () => {
             />
           )}
 
+          {/* TAB 4: AI TELEMETRY */}
           {activeTab === 'telemetry' && (
             <AITelemetryView logs={aiLogs} tenants={tenants} />
           )}
@@ -220,7 +228,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Toast Notification */}
+      {/* Floating Toast Notification */}
       {toastMessage && (
         <div className="clean-toast" id="interactive-toast">
           <CheckCircle2 size={16} color="#34d399" />
