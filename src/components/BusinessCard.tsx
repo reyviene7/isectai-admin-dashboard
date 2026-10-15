@@ -27,103 +27,92 @@ export const BusinessCard: React.FC<BusinessCardProps> = ({
 }) => {
   const isMedical = tenant.industry === 'medical_clinic';
   const recordsCount = isMedical ? appointmentsCount : serviceJobsCount;
-  const recordsLabel = isMedical ? 'Appointments' : 'Dispatched Jobs';
+  const recordsLabel = isMedical ? 'Appointments' : 'Work Orders';
 
   return (
     <div
-      className={`business-card ${isMedical ? 'medical' : 'service'}`}
+      className="clean-biz-card"
       onClick={() => onSelect(tenant)}
       id={`business-card-${tenant.slug}`}
     >
       <div>
-        {/* Top Badges */}
-        <div className="card-top">
-          <div className="card-badge-row">
-            <span className={`industry-pill ${isMedical ? 'medical' : 'service'}`}>
-              {isMedical ? (
-                <>
-                  <Stethoscope size={12} style={{ display: 'inline', marginRight: 4 }} />
-                  Medical Clinic
-                </>
-              ) : (
-                <>
-                  <Wrench size={12} style={{ display: 'inline', marginRight: 4 }} />
-                  Field Service
-                </>
-              )}
-            </span>
-            <span className="tier-pill">{tenant.subscription_tier}</span>
+        {/* Card Header */}
+        <div className="biz-card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              className="biz-avatar"
+              style={{
+                background: isMedical ? '#f0f9ff' : '#fffbeb',
+                color: isMedical ? '#0284c7' : '#d97706'
+              }}
+            >
+              {isMedical ? <Stethoscope size={24} /> : <Wrench size={24} />}
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                {tenant.name}
+              </h3>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: '0.78rem',
+                  color: 'var(--text-muted)',
+                  marginTop: 2
+                }}
+              >
+                <MapPin size={12} />
+                <span>
+                  {tenant.city}, {tenant.state}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={(e) => onSimulateCall(tenant, e)}
-            title="Simulate an inbound emergency/booking call handled by this business's AI agent"
-            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-            id={`simulate-btn-${tenant.slug}`}
-          >
-            <Sparkles size={13} color="#f59e0b" />
-            <span>Simulate Call</span>
-          </button>
+          <span className={`badge-clean ${isMedical ? 'badge-medical' : 'badge-service'}`}>
+            {isMedical ? 'Medical' : 'Trades'}
+          </span>
         </div>
 
-        {/* Business Title & Tagline */}
-        <h3 className="card-title">{tenant.name}</h3>
-        <p className="card-tagline">
-          {tenant.branding?.tagline || `${tenant.city}, ${tenant.state} • Multi-Tenant Partner`}
+        {/* Short Tagline */}
+        <p className="biz-tagline">
+          {tenant.branding?.tagline || `${tenant.city} • Active Multi-Tenant Partner`}
         </p>
 
-        {/* Quick Numbers Bar */}
-        <div className="card-metrics-row">
-          <div className="sub-metric">
-            <span className="sub-metric-val">
-              {agent?.total_calls_handled ? agent.total_calls_handled.toLocaleString() : '1,200+'}
-            </span>
-            <span className="sub-metric-lbl">AI Voice Calls</span>
+        {/* 3 Compact Numbers */}
+        <div className="biz-stats-box">
+          <div className="biz-stat-item">
+            <strong>{agent?.total_calls_handled ? agent.total_calls_handled.toLocaleString() : '1,200+'}</strong>
+            <span>AI Calls</span>
           </div>
-          <div className="sub-metric">
-            <span className="sub-metric-val">{recordsCount}</span>
-            <span className="sub-metric-lbl">{recordsLabel}</span>
+          <div className="biz-stat-item">
+            <strong>{recordsCount}</strong>
+            <span>{recordsLabel}</span>
           </div>
-          <div className="sub-metric">
-            <span className="sub-metric-val">
-              {tenant.business_settings?.ai_auto_booking ? 'Active' : 'Off'}
-            </span>
-            <span className="sub-metric-lbl">AI Auto-Dispatch</span>
+          <div className="biz-stat-item">
+            <strong style={{ color: '#059669' }}>98%</strong>
+            <span>AI Health</span>
           </div>
-        </div>
-
-        {/* Live AI Agent Waveform Indicator */}
-        <div className="ai-status-indicator">
-          <div className="ai-status-left">
-            <div className="waveform-mini">
-              <span className="waveform-bar" />
-              <span className="waveform-bar" />
-              <span className="waveform-bar" />
-              <span className="waveform-bar" />
-            </div>
-            <span style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.78rem' }}>
-              {agent ? agent.name.split('&')[0] : 'Voice Assistant'}
-            </span>
-          </div>
-          <span style={{ color: '#10b981', fontSize: '0.75rem', fontWeight: 600 }}>
-            {agent?.llm_model || 'gpt-4o'}
-          </span>
         </div>
       </div>
 
-      {/* Card Footer */}
-      <div className="card-footer">
-        <div className="card-location">
-          <MapPin size={14} color="#64748b" />
-          <span>
-            {tenant.city}, {tenant.state}
-          </span>
-        </div>
-        <div className="card-arrow-action">
-          <span>Inspect Records</span>
+      {/* Card Actions */}
+      <div className="biz-card-actions">
+        <button
+          className="btn-simulate-call"
+          onClick={(e) => onSimulateCall(tenant, e)}
+          title="Simulate an inbound emergency voice call"
+          id={`simulate-btn-${tenant.slug}`}
+        >
+          <Sparkles size={12} />
+          <span>Simulate AI Call</span>
+        </button>
+
+        <span className="view-link">
+          <span>View Records</span>
           <ArrowRight size={14} />
-        </div>
+        </span>
       </div>
     </div>
   );

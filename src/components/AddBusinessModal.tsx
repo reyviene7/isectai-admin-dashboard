@@ -35,7 +35,11 @@ export const AddBusinessModal: React.FC<AddBusinessModalProps> = ({ onClose, onA
       postal_code: '10003',
       branding: {
         primary_color: industry === 'medical_clinic' ? '#0ea5e9' : '#f59e0b',
-        tagline: tagline || (industry === 'medical_clinic' ? 'Comprehensive Specialty Care' : '24/7 Priority Field Maintenance')
+        tagline:
+          tagline ||
+          (industry === 'medical_clinic'
+            ? 'Specialty Clinical Care & Surgical Practice'
+            : '24/7 Priority Field Service & Emergency Repairs')
       },
       business_settings: {
         operating_hours: '08:00 - 18:00',
@@ -48,53 +52,72 @@ export const AddBusinessModal: React.FC<AddBusinessModalProps> = ({ onClose, onA
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose} id="add-business-modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 580 }}>
+    <div className="clean-modal-overlay" onClick={onClose} id="add-business-modal-overlay">
+      <div className="clean-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 540 }}>
         {/* Header */}
-        <div className="modal-header">
+        <div className="clean-modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
               style={{
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                background: 'rgba(99, 102, 241, 0.15)',
+                background: 'var(--primary-soft)',
+                color: 'var(--primary)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                color: '#818cf8'
+                justifyContent: 'center'
               }}
             >
               <Building2 size={20} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff' }}>
-                Onboard New Business Tenant
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                Add New Business
               </h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Add another clinic or trade service to the multi-tenant platform
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                Onboard a new clinic or trade service to iSectAI
               </p>
             </div>
           </div>
 
           <button
-            className="btn btn-secondary btn-sm"
+            className="btn-clean-secondary"
             onClick={onClose}
-            style={{ borderRadius: '50%', width: 32, height: 32, padding: 0 }}
+            style={{ width: 32, height: 32, padding: 0, justifyContent: 'center' }}
             id="close-add-modal-btn"
           >
-            <X size={16} />
+            <X size={15} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="modal-body">
-          <div className="form-group">
-            <label className="form-label">Business Name</label>
+        <form onSubmit={handleSubmit} className="clean-modal-body">
+          <div style={{ marginBottom: 14 }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: 'var(--text-secondary)',
+                marginBottom: 4
+              }}
+            >
+              Business Name
+            </label>
             <input
               type="text"
-              className="form-input"
-              placeholder="e.g. Gotham Orthopedics & Sports Medicine"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-light)',
+                background: 'var(--bg-shell)',
+                color: 'var(--text-main)',
+                fontSize: '0.86rem',
+                outline: 'none'
+              }}
+              placeholder="e.g. Tribeca Orthopedic Surgery"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -102,24 +125,62 @@ export const AddBusinessModal: React.FC<AddBusinessModalProps> = ({ onClose, onA
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-            <div className="form-group">
-              <label className="form-label">Industry Domain</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 14 }}>
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  marginBottom: 4
+                }}
+              >
+                Domain Industry
+              </label>
               <select
-                className="form-input"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-light)',
+                  background: 'var(--bg-shell)',
+                  color: 'var(--text-main)',
+                  fontSize: '0.86rem',
+                  outline: 'none'
+                }}
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value as BusinessIndustry)}
                 id="new-tenant-industry"
               >
-                <option value="medical_clinic">Medical Clinic (Healthcare)</option>
-                <option value="service_business">Field Service (Trades/HVAC/Plumbing)</option>
+                <option value="medical_clinic">Medical Clinic</option>
+                <option value="service_business">Field Trade Service</option>
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Subscription Tier</label>
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  marginBottom: 4
+                }}
+              >
+                Tier
+              </label>
               <select
-                className="form-input"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-light)',
+                  background: 'var(--bg-shell)',
+                  color: 'var(--text-main)',
+                  fontSize: '0.86rem',
+                  outline: 'none'
+                }}
                 value={tier}
                 onChange={(e) => setTier(e.target.value as SubscriptionTier)}
                 id="new-tenant-tier"
@@ -131,23 +192,61 @@ export const AddBusinessModal: React.FC<AddBusinessModalProps> = ({ onClose, onA
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-            <div className="form-group">
-              <label className="form-label">Phone DID</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 14 }}>
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  marginBottom: 4
+                }}
+              >
+                Phone Number
+              </label>
               <input
                 type="text"
-                className="form-input"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-light)',
+                  background: 'var(--bg-shell)',
+                  color: 'var(--text-main)',
+                  fontSize: '0.86rem',
+                  outline: 'none'
+                }}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Location (City, State)</label>
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  marginBottom: 4
+                }}
+              >
+                Location
+              </label>
               <input
                 type="text"
-                className="form-input"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-light)',
+                  background: 'var(--bg-shell)',
+                  color: 'var(--text-main)',
+                  fontSize: '0.86rem',
+                  outline: 'none'
+                }}
                 value={`${city}, ${state}`}
                 onChange={(e) => {
                   const parts = e.target.value.split(',');
@@ -158,24 +257,43 @@ export const AddBusinessModal: React.FC<AddBusinessModalProps> = ({ onClose, onA
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Marketing Tagline</label>
+          <div style={{ marginBottom: 14 }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: 'var(--text-secondary)',
+                marginBottom: 4
+              }}
+            >
+              Tagline (Optional)
+            </label>
             <input
               type="text"
-              className="form-input"
-              placeholder="e.g. State-of-the-Art Robotic Surgery & Physical Therapy"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-light)',
+                background: 'var(--bg-shell)',
+                color: 'var(--text-main)',
+                fontSize: '0.86rem',
+                outline: 'none'
+              }}
+              placeholder="e.g. Advanced Sports Medicine & Physical Therapy"
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
             />
           </div>
 
-          <div className="modal-footer" style={{ padding: '20px 0 0 0', marginTop: 10 }}>
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <div className="clean-modal-footer" style={{ padding: '16px 0 0 0', marginTop: 14 }}>
+            <button type="button" className="btn-clean-secondary" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" id="confirm-add-tenant-btn">
-              <Plus size={16} />
-              <span>Create Tenant & Provision AI Agent</span>
+            <button type="submit" className="btn-clean-primary" id="confirm-add-tenant-btn">
+              <Plus size={15} />
+              <span>Create Business</span>
             </button>
           </div>
         </form>

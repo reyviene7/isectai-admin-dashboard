@@ -35,9 +35,7 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({
     setIsTesting(true);
     setTestResult(null);
 
-    // Save temporary config to test
     saveStoredSupabaseConfig(url, anonKey);
-
     const result = await testSupabaseConnection();
     setTestResult(result);
     setIsTesting(false);
@@ -53,91 +51,122 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({
     setAnonKey('');
     setTestResult({
       success: true,
-      message: 'Credentials cleared. Switched to instant local demonstration mode.'
+      message: 'Reset to local demo mode.'
     });
     onConfigSaved();
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose} id="supabase-modal-overlay">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640 }}>
+    <div className="clean-modal-overlay" onClick={onClose} id="supabase-modal-overlay">
+      <div className="clean-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 580 }}>
         {/* Header */}
-        <div className="modal-header">
+        <div className="clean-modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
               style={{
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                background: 'rgba(16, 185, 129, 0.15)',
+                background: 'var(--success-soft)',
+                color: '#059669',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                color: '#34d399'
+                justifyContent: 'center'
               }}
             >
               <Database size={20} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff' }}>
-                Supabase Connection Manager
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                Database Connection
               </h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Configure live PostgreSQL credentials or evaluate via local mode
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                Connect live Supabase project or evaluate via local demo
               </p>
             </div>
           </div>
 
           <button
-            className="btn btn-secondary btn-sm"
+            className="btn-clean-secondary"
             onClick={onClose}
-            style={{ borderRadius: '50%', width: 32, height: 32, padding: 0 }}
+            style={{ width: 32, height: 32, padding: 0, justifyContent: 'center' }}
             id="close-supabase-modal-btn"
           >
-            <X size={16} />
+            <X size={15} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleTestAndSave} className="modal-body">
+        <form onSubmit={handleTestAndSave} className="clean-modal-body">
           <div
             style={{
-              padding: '12px 16px',
-              borderRadius: 12,
-              background: 'rgba(99, 102, 241, 0.08)',
-              border: '1px solid rgba(99, 102, 241, 0.2)',
-              fontSize: '0.84rem',
-              color: '#c7d2fe',
-              marginBottom: 20
+              padding: '10px 14px',
+              borderRadius: 8,
+              background: 'var(--primary-soft)',
+              color: 'var(--primary)',
+              fontSize: '0.8rem',
+              lineHeight: 1.4,
+              marginBottom: 16
             }}
           >
-            💡 <strong>Quick Setup:</strong> In your Supabase project, execute the SQL found in{' '}
-            <code>supabase/schema.sql</code> and <code>supabase/seed.sql</code>. Then paste your Project URL and Anon API Key below to connect live!
+            💡 Run <code>supabase/schema.sql</code> and <code>seed.sql</code> in your Supabase SQL Editor, then paste your credentials below.
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="supabase-url-input">
-              Project URL (e.g., https://your-project.supabase.co)
+          <div style={{ marginBottom: 14 }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: 'var(--text-secondary)',
+                marginBottom: 4
+              }}
+            >
+              Supabase Project URL
             </label>
             <input
-              id="supabase-url-input"
               type="text"
-              className="form-input"
-              placeholder="https://xyzcompany.supabase.co"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-light)',
+                background: 'var(--bg-shell)',
+                color: 'var(--text-main)',
+                fontSize: '0.86rem',
+                outline: 'none'
+              }}
+              placeholder="https://your-project.supabase.co"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="supabase-key-input">
-              Supabase Anon Public API Key
+          <div style={{ marginBottom: 14 }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: 'var(--text-secondary)',
+                marginBottom: 4
+              }}
+            >
+              Anon Public API Key
             </label>
             <input
-              id="supabase-key-input"
               type="password"
-              className="form-input"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-light)',
+                background: 'var(--bg-shell)',
+                color: 'var(--text-main)',
+                fontSize: '0.86rem',
+                outline: 'none'
+              }}
               placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
               value={anonKey}
               onChange={(e) => setAnonKey(e.target.value)}
@@ -145,67 +174,50 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({
             />
           </div>
 
-          {/* Test Status Banner */}
           {testResult && (
             <div
               style={{
-                padding: '12px 16px',
-                borderRadius: 10,
-                marginTop: 16,
+                padding: '10px 14px',
+                borderRadius: 8,
+                marginTop: 12,
                 display: 'flex',
-                alignItems: 'flex-start',
-                gap: 10,
-                fontSize: '0.84rem',
-                background: testResult.success
-                  ? 'rgba(16, 185, 129, 0.15)'
-                  : 'rgba(244, 63, 94, 0.15)',
-                border: `1px solid ${
-                  testResult.success ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)'
-                }`,
-                color: testResult.success ? '#6ee7b7' : '#fda4af'
+                alignItems: 'center',
+                gap: 8,
+                fontSize: '0.82rem',
+                background: testResult.success ? 'var(--success-soft)' : 'var(--danger-soft)',
+                color: testResult.success ? '#059669' : '#e11d48'
               }}
             >
-              {testResult.success ? (
-                <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-              ) : (
-                <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-              )}
-              <div>
-                <p style={{ fontWeight: 600 }}>{testResult.message}</p>
-                {testResult.latencyMs && (
-                  <p style={{ fontSize: '0.78rem', opacity: 0.85, marginTop: 2 }}>
-                    Roundtrip Latency: {testResult.latencyMs} ms
-                  </p>
-                )}
-              </div>
+              {testResult.success ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+              <span>{testResult.message}</span>
             </div>
           )}
 
-          <div className="modal-footer" style={{ padding: '20px 0 0 0', marginTop: 20 }}>
+          <div className="clean-modal-footer" style={{ padding: '16px 0 0 0', marginTop: 16 }}>
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn-clean-secondary"
               onClick={handleClear}
               style={{ marginRight: 'auto' }}
             >
-              <Trash2 size={15} />
-              <span>Reset to Local Demo</span>
+              <Trash2 size={14} />
+              <span>Reset to Demo</span>
             </button>
 
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button type="button" className="btn-clean-secondary" onClick={onClose}>
               Cancel
             </button>
 
-            <button type="submit" className="btn btn-primary" disabled={isTesting}>
+            <button type="submit" className="btn-clean-primary" disabled={isTesting}>
               {isTesting ? (
                 <>
-                  <RefreshCw size={15} className="spin" />
-                  <span>Testing Connection...</span>
+                  <RefreshCw size={14} className="spin" />
+                  <span>Testing...</span>
                 </>
               ) : (
                 <>
-                  <Server size={15} />
-                  <span>Connect & Verify</span>
+                  <Server size={14} />
+                  <span>Connect & Save</span>
                 </>
               )}
             </button>

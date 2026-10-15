@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Navbar } from './components/Navbar';
+import { Sidebar } from './components/Sidebar';
+import type { NavTab } from './components/Sidebar';
+import { Header } from './components/Header';
 import { MetricCards } from './components/MetricCards';
 import { BusinessList } from './components/BusinessList';
+import { AppointmentsView } from './components/AppointmentsView';
+import { DispatchesView } from './components/DispatchesView';
+import { AITelemetryView } from './components/AITelemetryView';
 import { BusinessDetailDrawer } from './components/BusinessDetailDrawer';
 import { ArchitectureModal } from './components/ArchitectureModal';
 import { SupabaseConfigModal } from './components/SupabaseConfigModal';
@@ -16,9 +21,13 @@ import type {
   AIActivityLog,
   DashboardMetrics
 } from './lib/types';
-import { MapPin, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<NavTab>('overview');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [agents, setAgents] = useState<AIAgent[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -36,9 +45,9 @@ export const App: React.FC = () => {
   });
 
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
-  const [showArchitecture, setShowArchitecture] = useState(false);
-  const [showConfig, setShowConfig] = useState(false);
-  const [showAddBusiness, setShowAddBusiness] = useState(false);
+  const [showArchitectureModal, setShowArchitectureModal] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showAddBusinessModal, setShowAddBusinessModal] = useState(false);
   const [isLiveSupabase, setIsLiveSupabase] = useState(false);
   const [latencyMs, setLatencyMs] = useState<number | undefined>(undefined);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -47,11 +56,10 @@ export const App: React.FC = () => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 4000);
+    }, 3500);
   };
 
   const loadData = useCallback(async () => {
-    // Check connection first
     const testResult = await testSupabaseConnection();
     setIsLiveSupabase(testResult.success);
     setLatencyMs(testResult.latencyMs);
@@ -77,94 +85,103 @@ export const App: React.FC = () => {
     loadData();
   }, [loadData]);
 
+  // Sync theme attribute to document body
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
   const handleSimulateCall = async (tenant: Tenant, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     await api.simulateAICall(tenant);
     await loadData();
 
     const isMedical = tenant.industry === 'medical_clinic';
-    const detail = isMedical ? 'New Clinical Appointment' : 'Priority Emergency Dispatch';
-    showToast(`⚡ AI Autonomous Action: ${detail} booked for ${tenant.name}!`);
+    const detail = isMedical ? 'New Appointment' : 'Emergency Dispatch';
+    showToast(`⚡ AI Auto-Booked: ${detail} for ${tenant.name}`);
   };
 
   const handleAddTenant = async (newTenantData: Omit<Tenant, 'id' | 'created_at'>) => {
     const created = await api.createTenant(newTenantData);
     await loadData();
-    showToast(`🎉 Tenant "${created.name}" successfully onboarded!`);
+    showToast(`🎉 "${created.name}" onboarded successfully!`);
+  };
+
+  const handleTabChange = (tab: NavTab) => {
+    if (tab === 'architecture') {
+      setShowArchitectureModal(true);
+    } else {
+      setActiveTab(tab);
+    }
   };
 
   return (
-    <div className="app-container">
-      {/* Top Navigation */}
-      <Navbar
-        onOpenArchitecture={() => setShowArchitecture(true)}
-        onOpenConfig={() => setShowConfig(true)}
-        onOpenAddBusiness={() => setShowAddBusiness(true)}
+    <div className="app-shell" id="app-root-shell">
+      {/* Left Sidebar matching sample10.jpg & sample1.jpg */}
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
         isLiveSupabase={isLiveSupabase}
         latencyMs={latencyMs}
+        onOpenConfig={() => setShowConfigModal(true)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        totalAppts={appointments.length}
+        totalJobs={serviceJobs.length}
       />
 
-      {/* Dashboard Header */}
-      <header className="dashboard-header" id="dashboard-header">
-        <div className="header-top">
-          <div className="header-title-group">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span className="client-location-tag">
-                <MapPin size={12} color="#06b6d4" />
-                <span>New York Headquarters</span>
-              </span>
-              <span
-                style={{
-                  fontSize: '0.78rem',
-                  padding: '3px 10px',
-                  borderRadius: 999,
-                  background: 'rgba(99, 102, 241, 0.15)',
-                  color: '#a5b4fc',
-                  fontWeight: 600
-                }}
-              >
-                Multi-Tenant Architecture Prototype
-              </span>
-            </div>
+      {/* Main Content Canvas */}
+      <main className="main-canvas" id="app-main-canvas">
+        {/* Top Header Bar with Search & Single Action Button */}
+        <Header
+          activeTab={activeTab}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onOpenAddBusiness={() => setShowAddBusinessModal(true)}
+        />
 
-            <h1>Enterprise Central Administration</h1>
-            <p>
-              Centralized platform orchestrating AI-powered voice reception, triage pre-screening, and
-              autonomous dispatch operations across medical clinics and commercial service businesses.
-            </p>
-          </div>
+        {/* Canvas Body */}
+        <div className="canvas-body">
+          {/* Streamlined KPI Cards */}
+          <MetricCards metrics={metrics} />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button
-              className="btn btn-secondary"
-              onClick={() => setShowArchitecture(true)}
-              id="view-whitepaper-btn"
-            >
-              <span>Architecture Whitepaper</span>
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => setShowAddBusiness(true)}
-              id="header-onboard-btn"
-            >
-              <span>+ Onboard Business</span>
-            </button>
-          </div>
+          {/* Active Tab View */}
+          {activeTab === 'overview' && (
+            <BusinessList
+              tenants={tenants}
+              agents={agents}
+              appointments={appointments}
+              serviceJobs={serviceJobs}
+              searchQuery={searchQuery}
+              onSelectTenant={(t) => setSelectedTenant(t)}
+              onSimulateCall={handleSimulateCall}
+            />
+          )}
+
+          {activeTab === 'appointments' && (
+            <AppointmentsView
+              appointments={appointments}
+              tenants={tenants}
+              onSelectTenant={(t) => setSelectedTenant(t)}
+            />
+          )}
+
+          {activeTab === 'dispatches' && (
+            <DispatchesView
+              serviceJobs={serviceJobs}
+              tenants={tenants}
+              onSelectTenant={(t) => setSelectedTenant(t)}
+            />
+          )}
+
+          {activeTab === 'telemetry' && (
+            <AITelemetryView logs={aiLogs} tenants={tenants} />
+          )}
         </div>
-      </header>
-
-      {/* Bento Metric KPI Cards */}
-      <MetricCards metrics={metrics} />
-
-      {/* Pinterest-Inspired Bento Grid & Table of Businesses */}
-      <BusinessList
-        tenants={tenants}
-        agents={agents}
-        appointments={appointments}
-        serviceJobs={serviceJobs}
-        onSelectTenant={(tenant) => setSelectedTenant(tenant)}
-        onSimulateCall={handleSimulateCall}
-      />
+      </main>
 
       {/* Slide-over Detail Drawer */}
       {selectedTenant && (
@@ -175,36 +192,38 @@ export const App: React.FC = () => {
           serviceJobs={serviceJobs}
           aiLogs={aiLogs}
           onClose={() => setSelectedTenant(null)}
-          onSimulateCall={(tenant) => handleSimulateCall(tenant)}
+          onSimulateCall={(t) => handleSimulateCall(t)}
         />
       )}
 
-      {/* Architecture & Evaluation Modal */}
-      {showArchitecture && <ArchitectureModal onClose={() => setShowArchitecture(false)} />}
+      {/* Architecture & RLS Modal */}
+      {showArchitectureModal && (
+        <ArchitectureModal onClose={() => setShowArchitectureModal(false)} />
+      )}
 
-      {/* Supabase Connection Config Modal */}
-      {showConfig && (
+      {/* Supabase Connection Modal */}
+      {showConfigModal && (
         <SupabaseConfigModal
-          onClose={() => setShowConfig(false)}
+          onClose={() => setShowConfigModal(false)}
           onConfigSaved={() => {
             loadData();
-            showToast('✅ Supabase configuration saved and updated.');
+            showToast('✅ Supabase connected & verified.');
           }}
         />
       )}
 
       {/* Add Business Modal */}
-      {showAddBusiness && (
+      {showAddBusinessModal && (
         <AddBusinessModal
-          onClose={() => setShowAddBusiness(false)}
+          onClose={() => setShowAddBusinessModal(false)}
           onAdd={handleAddTenant}
         />
       )}
 
-      {/* Floating Interactive Toast */}
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className="toast" id="interactive-toast">
-          <CheckCircle2 size={18} color="#10b981" />
+        <div className="clean-toast" id="interactive-toast">
+          <CheckCircle2 size={16} color="#34d399" />
           <span>{toastMessage}</span>
         </div>
       )}

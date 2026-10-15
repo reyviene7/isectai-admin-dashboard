@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutGrid, List, Search, Building, Stethoscope, Wrench, ArrowUpRight } from 'lucide-react';
+import { LayoutGrid, List, Stethoscope, Wrench, ArrowRight } from 'lucide-react';
 import type { Tenant, AIAgent, Appointment, ServiceJob } from '../lib/types';
 import { BusinessCard } from './BusinessCard';
 
@@ -8,6 +8,7 @@ interface BusinessListProps {
   agents: AIAgent[];
   appointments: Appointment[];
   serviceJobs: ServiceJob[];
+  searchQuery: string;
   onSelectTenant: (tenant: Tenant) => void;
   onSimulateCall: (tenant: Tenant, e: React.MouseEvent) => void;
 }
@@ -17,129 +18,115 @@ export const BusinessList: React.FC<BusinessListProps> = ({
   agents,
   appointments,
   serviceJobs,
+  searchQuery,
   onSelectTenant,
   onSimulateCall
 }) => {
-  const [filter, setFilter] = useState<'all' | 'medical_clinic' | 'service_business' | 'enterprise'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | 'medical_clinic' | 'service_business'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   const medicalCount = tenants.filter((t) => t.industry === 'medical_clinic').length;
   const serviceCount = tenants.filter((t) => t.industry === 'service_business').length;
-  const enterpriseCount = tenants.filter((t) => t.subscription_tier === 'enterprise').length;
 
   const filteredTenants = tenants.filter((tenant) => {
-    // Filter pill matching
     if (filter === 'medical_clinic' && tenant.industry !== 'medical_clinic') return false;
     if (filter === 'service_business' && tenant.industry !== 'service_business') return false;
-    if (filter === 'enterprise' && tenant.subscription_tier !== 'enterprise') return false;
 
-    // Search query matching
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchName = tenant.name.toLowerCase().includes(q);
-      const matchCity = tenant.city.toLowerCase().includes(q);
-      const matchState = tenant.state.toLowerCase().includes(q);
-      const matchEmail = tenant.email.toLowerCase().includes(q);
-      return matchName || matchCity || matchState || matchEmail;
+      return (
+        tenant.name.toLowerCase().includes(q) ||
+        tenant.city.toLowerCase().includes(q) ||
+        tenant.email.toLowerCase().includes(q)
+      );
     }
-
     return true;
   });
 
   return (
-    <div className="businesses-section" id="businesses-section">
-      {/* Pinterest-Style Toolbar & Filters */}
-      <div className="toolbar-container">
-        <div className="filter-pills-group">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Clean Toolbar */}
+      <div className="content-toolbar">
+        <div className="filter-group">
           <button
-            className={`filter-pill ${filter === 'all' ? 'active' : ''}`}
+            className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
-            id="filter-all-btn"
+            id="filter-pill-all"
           >
             <span>All Businesses</span>
-            <span className="filter-count">{tenants.length}</span>
+            <span className="filter-pill-count">{tenants.length}</span>
           </button>
 
           <button
-            className={`filter-pill ${filter === 'medical_clinic' ? 'active' : ''}`}
+            className={`filter-btn ${filter === 'medical_clinic' ? 'active' : ''}`}
             onClick={() => setFilter('medical_clinic')}
-            id="filter-medical-btn"
+            id="filter-pill-medical"
           >
             <Stethoscope size={14} />
             <span>Medical Clinics</span>
-            <span className="filter-count">{medicalCount}</span>
+            <span className="filter-pill-count">{medicalCount}</span>
           </button>
 
           <button
-            className={`filter-pill ${filter === 'service_business' ? 'active' : ''}`}
+            className={`filter-btn ${filter === 'service_business' ? 'active' : ''}`}
             onClick={() => setFilter('service_business')}
-            id="filter-service-btn"
+            id="filter-pill-service"
           >
             <Wrench size={14} />
             <span>Field Services</span>
-            <span className="filter-count">{serviceCount}</span>
-          </button>
-
-          <button
-            className={`filter-pill ${filter === 'enterprise' ? 'active' : ''}`}
-            onClick={() => setFilter('enterprise')}
-            id="filter-enterprise-btn"
-          >
-            <span>Enterprise Tier</span>
-            <span className="filter-count">{enterpriseCount}</span>
+            <span className="filter-pill-count">{serviceCount}</span>
           </button>
         </div>
 
-        {/* Search & View Switcher */}
-        <div className="toolbar-right">
-          <div className="search-box">
-            <Search size={16} className="search-icon" />
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search clinics & businesses..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              id="business-search-input"
-            />
-          </div>
+        {/* View Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button
+            className={`btn-clean-secondary ${viewMode === 'grid' ? 'active' : ''}`}
+            onClick={() => setViewMode('grid')}
+            style={{
+              padding: '6px 12px',
+              background: viewMode === 'grid' ? 'var(--primary-soft)' : 'var(--bg-shell)',
+              color: viewMode === 'grid' ? 'var(--primary)' : 'var(--text-secondary)'
+            }}
+            title="Grid View"
+            id="view-mode-grid"
+          >
+            <LayoutGrid size={15} />
+            <span>Grid</span>
+          </button>
 
-          <div className="view-toggle">
-            <button
-              className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => setViewMode('grid')}
-              title="Bento Grid View"
-              id="view-grid-btn"
-            >
-              <LayoutGrid size={16} />
-            </button>
-            <button
-              className={`view-toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
-              onClick={() => setViewMode('table')}
-              title="Table View"
-              id="view-table-btn"
-            >
-              <List size={16} />
-            </button>
-          </div>
+          <button
+            className={`btn-clean-secondary ${viewMode === 'table' ? 'active' : ''}`}
+            onClick={() => setViewMode('table')}
+            style={{
+              padding: '6px 12px',
+              background: viewMode === 'table' ? 'var(--primary-soft)' : 'var(--bg-shell)',
+              color: viewMode === 'table' ? 'var(--primary)' : 'var(--text-secondary)'
+            }}
+            title="Table View"
+            id="view-mode-table"
+          >
+            <List size={15} />
+            <span>Table</span>
+          </button>
         </div>
       </div>
 
       {/* Render View */}
       {filteredTenants.length === 0 ? (
         <div
-          className="glass-panel"
-          style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}
+          style={{
+            padding: '48px 20px',
+            textAlign: 'center',
+            background: 'var(--bg-shell)',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--border-light)'
+          }}
         >
-          <Building size={40} style={{ opacity: 0.4, margin: '0 auto 16px' }} />
-          <h3>No businesses match your criteria</h3>
-          <p style={{ marginTop: 8, fontSize: '0.9rem' }}>
-            Try modifying your search or clearing the active filter.
-          </p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No businesses match your search.</p>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="bento-grid">
+        <div className="business-grid">
           {filteredTenants.map((tenant) => {
             const agent = agents.find((a) => a.tenant_id === tenant.id);
             const apptsCount = appointments.filter((a) => a.tenant_id === tenant.id).length;
@@ -159,16 +146,16 @@ export const BusinessList: React.FC<BusinessListProps> = ({
           })}
         </div>
       ) : (
-        <div className="table-container">
-          <table className="data-table">
+        <div className="clean-table-card">
+          <table className="clean-table">
             <thead>
               <tr>
                 <th>Business Name</th>
-                <th>Industry</th>
+                <th>Domain</th>
                 <th>Location</th>
                 <th>AI Agent Model</th>
-                <th>Status</th>
                 <th>Records</th>
+                <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -181,48 +168,34 @@ export const BusinessList: React.FC<BusinessListProps> = ({
                   : serviceJobs.filter((j) => j.tenant_id === tenant.id).length;
 
                 return (
-                  <tr key={tenant.id} style={{ cursor: 'pointer' }} onClick={() => onSelectTenant(tenant)}>
-                    <td style={{ fontWeight: 600, color: '#ffffff' }}>{tenant.name}</td>
+                  <tr
+                    key={tenant.id}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => onSelectTenant(tenant)}
+                  >
+                    <td style={{ fontWeight: 700, color: 'var(--text-main)' }}>{tenant.name}</td>
                     <td>
-                      <span className={`industry-pill ${isMedical ? 'medical' : 'service'}`}>
-                        {isMedical ? 'Medical Clinic' : 'Field Service'}
+                      <span className={`badge-clean ${isMedical ? 'badge-medical' : 'badge-service'}`}>
+                        {isMedical ? 'Medical' : 'Trades'}
                       </span>
                     </td>
                     <td>
                       {tenant.city}, {tenant.state}
                     </td>
-                    <td>
-                      <span style={{ color: '#10b981', fontWeight: 600 }}>
-                        {agent?.llm_model || 'gpt-4o'}
-                      </span>
+                    <td style={{ fontWeight: 600, color: 'var(--primary)' }}>
+                      {agent?.llm_model || 'gpt-4o'}
                     </td>
-                    <td>
-                      <span
-                        style={{
-                          padding: '2px 8px',
-                          borderRadius: 999,
-                          fontSize: '0.75rem',
-                          background: 'rgba(16, 185, 129, 0.15)',
-                          color: '#6ee7b7'
-                        }}
-                      >
-                        {tenant.status}
-                      </span>
-                    </td>
-                    <td>
+                    <td style={{ fontWeight: 600 }}>
                       {count} {isMedical ? 'Appts' : 'Jobs'}
                     </td>
                     <td>
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectTenant(tenant);
-                        }}
-                      >
+                      <span className="badge-clean badge-success">{tenant.status}</span>
+                    </td>
+                    <td>
+                      <span className="view-link">
                         <span>Details</span>
-                        <ArrowUpRight size={14} />
-                      </button>
+                        <ArrowRight size={14} />
+                      </span>
                     </td>
                   </tr>
                 );
