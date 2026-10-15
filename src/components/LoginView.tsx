@@ -64,17 +64,19 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, theme, onToggleTh
     <div className="login-screen-wrapper">
       {/* Top Navbar */}
       <header className="login-top-bar">
-        {/* Clean Logo & Brand (No redundant enterprise auth text) */}
-        <div className="login-brand-group">
-          <div className="brand-icon" style={{ width: 34, height: 34, fontSize: '1rem' }}>
-            iS
+        {/* Elevated Glassmorphic Brand Capsule */}
+        <div className="login-brand-capsule">
+          <div className="brand-logo-mark">
+            <span>iS</span>
           </div>
-          <div className="brand-text">
-            <h2 style={{ fontSize: '1.12rem', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1.2 }}>
-              iSectAI
-            </h2>
-            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Portal
+          <div className="brand-copy">
+            <div className="brand-name-row">
+              <span className="brand-primary-name">iSect</span>
+              <span className="brand-gradient-tag">AI</span>
+            </div>
+            <span className="brand-sub-badge">
+              <span className="brand-live-dot" />
+              <span>Platform OS</span>
             </span>
           </div>
         </div>
