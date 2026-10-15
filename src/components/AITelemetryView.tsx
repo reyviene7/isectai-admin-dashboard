@@ -9,7 +9,7 @@ interface AITelemetryViewProps {
 
 export const AITelemetryView: React.FC<AITelemetryViewProps> = ({ logs, tenants }) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', minWidth: 0 }}>
       {logs.map((log) => {
         const tenant = tenants.find((t) => t.id === log.tenant_id);
 
@@ -20,16 +20,28 @@ export const AITelemetryView: React.FC<AITelemetryViewProps> = ({ logs, tenants 
               background: 'var(--bg-shell)',
               border: '1px solid var(--border-light)',
               borderRadius: 'var(--radius-lg)',
-              padding: '20px 24px',
+              padding: '16px 18px',
               boxShadow: 'var(--shadow-sm)',
               display: 'flex',
               flexDirection: 'column',
-              gap: 12
+              gap: 12,
+              width: '100%',
+              minWidth: 0,
+              overflow: 'hidden'
             }}
           >
-            {/* Top row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Top row with clean wrapping */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 10
+              }}
+            >
+              {/* Caller Identity */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
                 <div
                   style={{
                     width: 36,
@@ -39,25 +51,50 @@ export const AITelemetryView: React.FC<AITelemetryViewProps> = ({ logs, tenants 
                     color: 'var(--primary)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    flexShrink: 0
                   }}
                 >
-                  <PhoneCall size={18} />
+                  <PhoneCall size={17} />
                 </div>
-                <div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                <div style={{ minWidth: 0 }}>
+                  <h4
+                    style={{
+                      fontSize: '0.92rem',
+                      fontWeight: 700,
+                      color: 'var(--text-main)',
+                      wordBreak: 'break-word',
+                      lineHeight: 1.3
+                    }}
+                  >
                     {log.caller_name}
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginLeft: 8 }}>
-                      ({log.caller_phone})
-                    </span>
                   </h4>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Tenant: {tenant?.name || 'Clinic'}
-                  </span>
+                  <div
+                    style={{
+                      fontSize: '0.74rem',
+                      color: 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      flexWrap: 'wrap'
+                    }}
+                  >
+                    <span>{log.caller_phone}</span>
+                    <span>•</span>
+                    <span style={{ fontWeight: 600 }}>{tenant?.name.split('&')[0]}</span>
+                  </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* Status and Telemetry stats */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  flexWrap: 'wrap'
+                }}
+              >
                 <span
                   className={`badge-clean ${
                     log.sentiment === 'urgent' ? 'badge-danger' : 'badge-success'
@@ -70,23 +107,31 @@ export const AITelemetryView: React.FC<AITelemetryViewProps> = ({ logs, tenants 
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 12,
-                    fontSize: '0.76rem',
-                    color: 'var(--text-muted)'
+                    gap: 8,
+                    fontSize: '0.74rem',
+                    color: 'var(--text-muted)',
+                    whiteSpace: 'nowrap'
                   }}
                 >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Clock size={13} /> {log.duration_seconds}s
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                    <Clock size={12} /> {log.duration_seconds}s
                   </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Cpu size={13} /> {log.tokens_used.toLocaleString()} tokens
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                    <Cpu size={12} /> {log.tokens_used.toLocaleString()} tok
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Summary */}
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+            <p
+              style={{
+                fontSize: '0.84rem',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.45,
+                wordBreak: 'break-word'
+              }}
+            >
               {log.summary}
             </p>
 
@@ -96,16 +141,17 @@ export const AITelemetryView: React.FC<AITelemetryViewProps> = ({ logs, tenants 
                 background: 'var(--bg-subtle)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: 'var(--radius-md)',
-                padding: '10px 14px',
-                fontSize: '0.8rem',
+                padding: '10px 12px',
+                fontSize: '0.78rem',
                 color: 'var(--text-secondary)',
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: 8
+                gap: 8,
+                wordBreak: 'break-word'
               }}
             >
-              <MessageSquareQuote size={16} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
-              <div>{log.transcript_snippet}</div>
+              <MessageSquareQuote size={15} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
+              <div style={{ lineHeight: 1.4 }}>{log.transcript_snippet}</div>
             </div>
           </div>
         );

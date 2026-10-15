@@ -35,29 +35,28 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
     return true;
   });
 
-  // KPI calculations for appointments
   const totalCount = filteredAppointments.length;
   const confirmedCount = filteredAppointments.filter((a) => a.status === 'confirmed').length;
   const aiBookedCount = filteredAppointments.filter((a) => a.booked_via_ai).length;
   const urgentCount = filteredAppointments.filter(
-    (a) => a.chief_complaint?.toLowerCase().includes('severe') || a.chief_complaint?.toLowerCase().includes('emergency')
+    (a) =>
+      a.chief_complaint?.toLowerCase().includes('severe') ||
+      a.chief_complaint?.toLowerCase().includes('emergency')
   ).length;
 
-  // Timeline slots definition (8:00 AM to 5:00 PM)
   const timelineHours = [
-    { hour: '08:00 AM', label: '8:00' },
-    { hour: '09:00 AM', label: '9:00' },
-    { hour: '10:00 AM', label: '10:00' },
-    { hour: '11:00 AM', label: '11:00' },
-    { hour: '12:00 PM', label: '12:00' },
-    { hour: '01:00 PM', label: '13:00' },
-    { hour: '02:00 PM', label: '14:00' },
-    { hour: '03:00 PM', label: '15:00' },
-    { hour: '04:00 PM', label: '16:00' },
-    { hour: '05:00 PM', label: '17:00' }
+    { hour: '08:00 AM' },
+    { hour: '09:00 AM' },
+    { hour: '10:00 AM' },
+    { hour: '11:00 AM' },
+    { hour: '12:00 PM' },
+    { hour: '01:00 PM' },
+    { hour: '02:00 PM' },
+    { hour: '03:00 PM' },
+    { hour: '04:00 PM' },
+    { hour: '05:00 PM' }
   ];
 
-  // Calendar dates mock generator for October 2026
   const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
   const eventDays = [12, 14, 16, 17, 20, 24, 28];
 
@@ -66,8 +65,8 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* 1. Contextual Appointment Metrics Header (sample10.jpg) */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%', minWidth: 0 }}>
+      {/* 1. Contextual Appointment Metrics Header */}
       <div className="kpi-row" id="appointment-kpis">
         <div className="kpi-card">
           <div className="kpi-icon-box" style={{ background: '#eff6ff', color: '#2563eb' }}>
@@ -75,7 +74,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
           </div>
           <div className="kpi-details">
             <span className="kpi-number">{totalCount}</span>
-            <span className="kpi-title">Today's Schedule</span>
+            <span className="kpi-title">Today's Slots</span>
           </div>
         </div>
 
@@ -85,7 +84,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
           </div>
           <div className="kpi-details">
             <span className="kpi-number">{aiBookedCount}</span>
-            <span className="kpi-title">AI Auto-Scheduled</span>
+            <span className="kpi-title">AI Scheduled</span>
           </div>
         </div>
 
@@ -95,7 +94,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
           </div>
           <div className="kpi-details">
             <span className="kpi-number">{confirmedCount}</span>
-            <span className="kpi-title">Confirmed Slots</span>
+            <span className="kpi-title">Confirmed</span>
           </div>
         </div>
 
@@ -105,7 +104,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
           </div>
           <div className="kpi-details">
             <span className="kpi-number">{urgentCount}</span>
-            <span className="kpi-title">Urgent AI Triage</span>
+            <span className="kpi-title">Urgent Triage</span>
           </div>
         </div>
       </div>
@@ -136,8 +135,8 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
           })}
         </div>
 
-        {/* View Mode Toggle: Calendar Schedule vs Table */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {/* View Mode Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           <button
             className={`btn-clean-secondary ${viewMode === 'calendar' ? 'active' : ''}`}
             onClick={() => setViewMode('calendar')}
@@ -148,7 +147,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
             }}
             id="view-calendar-btn"
           >
-            <CalendarDays size={15} />
+            <CalendarDays size={14} />
             <span>Itinerary & Calendar</span>
           </button>
 
@@ -162,13 +161,13 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
             }}
             id="view-table-btn"
           >
-            <LayoutList size={15} />
+            <LayoutList size={14} />
             <span>Table</span>
           </button>
         </div>
       </div>
 
-      {/* 3. CALENDAR & ITINERARY VIEW (Inspired by sample.jpg & sample5.jpg) */}
+      {/* 3. CALENDAR & ITINERARY VIEW */}
       {viewMode === 'calendar' ? (
         <div className="calendar-layout-grid">
           {/* Left Mini Calendar Widget */}
@@ -198,7 +197,6 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
 
             {/* Date Grid */}
             <div className="calendar-dates-grid">
-              {/* Empty offset days for October 2026 (Starts on Thursday, 4 blanks) */}
               <div />
               <div />
               <div />
@@ -222,8 +220,8 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
               })}
             </div>
 
-            {/* Legend & Doctors (matching sample.jpg & sample5.jpg) */}
-            <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 14 }}>
+            {/* Practitioners */}
+            <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 12 }}>
               <span
                 style={{
                   fontSize: '0.72rem',
@@ -233,71 +231,71 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                   letterSpacing: '0.05em'
                 }}
               >
-                On-Duty Practitioners
+                On-Duty Doctors
               </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div
                     style={{
-                      width: 28,
-                      height: 28,
+                      width: 26,
+                      height: 26,
                       borderRadius: '50%',
                       background: 'var(--medical-soft)',
                       color: 'var(--medical-color)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '0.75rem',
-                      fontWeight: 700
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      flexShrink: 0
                     }}
                   >
                     JV
                   </div>
-                  <div>
-                    <strong style={{ fontSize: '0.8rem', display: 'block', color: 'var(--text-main)' }}>
+                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                    <strong style={{ fontSize: '0.78rem', display: 'block', color: 'var(--text-main)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                       Dr. Julian Vance, DDS
                     </strong>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Oral Surgery</span>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Oral Surgery</span>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div
                     style={{
-                      width: 28,
-                      height: 28,
+                      width: 26,
+                      height: 26,
                       borderRadius: '50%',
                       background: 'var(--primary-soft)',
                       color: 'var(--primary)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '0.75rem',
-                      fontWeight: 700
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      flexShrink: 0
                     }}
                   >
                     AP
                   </div>
-                  <div>
-                    <strong style={{ fontSize: '0.8rem', display: 'block', color: 'var(--text-main)' }}>
+                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                    <strong style={{ fontSize: '0.78rem', display: 'block', color: 'var(--text-main)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                       Dr. Anaya Patel, MD
                     </strong>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Cardiology</span>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Cardiology</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Daily Timeline Itinerary (sample.jpg, sample4.jpg, sample5.jpg) */}
+          {/* Right Daily Timeline Itinerary */}
           <div className="timeline-schedule-card">
             <div className="timeline-header">
-              <div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                  Schedule Itinerary for October {selectedDay}, 2026
-                </h3>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  Live synchronized clinical slots and autonomous AI intake reservations
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <h3>October {selectedDay}, 2026 Itinerary</h3>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  Clinical schedule & AI intake slots
                 </span>
               </div>
 
@@ -307,8 +305,8 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                   onClick={() => onSimulateCall(medicalTenants[0])}
                   id="calendar-simulate-booking-btn"
                 >
-                  <Sparkles size={13} />
-                  <span>Simulate Inbound Booking</span>
+                  <Sparkles size={12} />
+                  <span>Simulate Booking</span>
                 </button>
               )}
             </div>
@@ -316,9 +314,8 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
             {/* Timeline Rows */}
             <div className="timeline-slots-container">
               {timelineHours.map((slot, index) => {
-                // Check if an appointment falls roughly into this hour
                 const matchingAppt = filteredAppointments[index % filteredAppointments.length];
-                const hasAppt = index === 2 || index === 3 || index === 6; // Spread slots realistically
+                const hasAppt = index === 2 || index === 3 || index === 6;
                 const tenant = matchingAppt ? tenants.find((t) => t.id === matchingAppt.tenant_id) : null;
 
                 return (
@@ -330,47 +327,57 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                         className="schedule-slot-card"
                         onClick={() => tenant && onSelectTenant(tenant)}
                       >
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                            <span className="badge-clean badge-medical">
-                              {matchingAppt.status}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span className="badge-clean badge-medical">
+                            {matchingAppt.status}
+                          </span>
+                          <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                            {matchingAppt.department} • Room {matchingAppt.room_number || '2'}
+                          </span>
+                          {matchingAppt.booked_via_ai && (
+                            <span
+                              style={{
+                                fontSize: '0.7rem',
+                                color: '#059669',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 3,
+                                fontWeight: 600
+                              }}
+                            >
+                              <Sparkles size={11} /> AI Booked
                             </span>
-                            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                              {matchingAppt.department} • Room {matchingAppt.room_number || 'Suite 2'}
-                            </span>
-                            {matchingAppt.booked_via_ai && (
-                              <span
-                                style={{
-                                  fontSize: '0.7rem',
-                                  color: '#059669',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 3,
-                                  fontWeight: 600
-                                }}
-                              >
-                                <Sparkles size={11} /> AI Booked
-                              </span>
-                            )}
-                          </div>
-
-                          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                            {matchingAppt.appointment_type}
-                          </h4>
-                          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: 2 }}>
-                            Provider: {matchingAppt.provider_name} ({tenant?.name.split('&')[0]})
-                          </p>
-
-                          {matchingAppt.chief_complaint && (
-                            <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                              Note: {matchingAppt.chief_complaint}
-                            </p>
                           )}
                         </div>
 
-                        <span className="badge-clean badge-medical">
-                          {tenant?.name.split('&')[0]}
-                        </span>
+                        <h4
+                          style={{
+                            fontSize: '0.9rem',
+                            fontWeight: 700,
+                            color: 'var(--text-main)',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.3
+                          }}
+                        >
+                          {matchingAppt.appointment_type}
+                        </h4>
+
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: 6
+                          }}
+                        >
+                          <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                            Provider: {matchingAppt.provider_name}
+                          </span>
+                          <span className="badge-clean badge-medical">
+                            {tenant?.name.split('&')[0]}
+                          </span>
+                        </div>
                       </div>
                     ) : (
                       <div
@@ -381,7 +388,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                           }
                         }}
                       >
-                        <span>+ Open Slot (Available for AI Voice Assistant Auto-Booking)</span>
+                        <span>+ Open Slot (Tap to Auto-Book with AI)</span>
                       </div>
                     )}
                   </div>
@@ -391,7 +398,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
           </div>
         </div>
       ) : (
-        /* 4. TABLE VIEW (Matching sample6.jpg) */
+        /* 4. TABLE VIEW */
         <div className="clean-table-card">
           <table className="clean-table">
             <thead>
@@ -400,7 +407,6 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                 <th>Appointment Type</th>
                 <th>Physician</th>
                 <th>Clinic</th>
-                <th>AI Triage Summary</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -415,8 +421,8 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                     onClick={() => tenant && onSelectTenant(tenant)}
                   >
                     <td style={{ fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Clock size={13} color="var(--primary)" />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <Clock size={12} color="var(--primary)" />
                         <span>
                           {new Date(appt.scheduled_start).toLocaleTimeString([], {
                             hour: '2-digit',
@@ -424,7 +430,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                           })}
                         </span>
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                         {new Date(appt.scheduled_start).toLocaleDateString([], {
                           month: 'short',
                           day: 'numeric'
@@ -436,7 +442,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                       <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>
                         {appt.appointment_type}
                       </div>
-                      <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         {appt.chief_complaint || 'Standard Consult'}
                       </div>
                     </td>
@@ -445,7 +451,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                       <div style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
                         {appt.provider_name}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                         {appt.department}
                       </div>
                     </td>
@@ -454,12 +460,6 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                       <span className="badge-clean badge-medical">
                         {tenant?.name.split('&')[0] || 'Clinic'}
                       </span>
-                    </td>
-
-                    <td style={{ maxWidth: 260 }}>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.3 }}>
-                        {appt.ai_triage_summary || 'Standard intake verified'}
-                      </div>
                     </td>
 
                     <td>
