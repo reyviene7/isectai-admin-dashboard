@@ -1,0 +1,142 @@
+[
+  {
+    "schema_name": "public",
+    "table_name": "ai_activity_logs",
+    "policy_name": "Platform Admins have full access to ai_activity_logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "ALL",
+    "using_expression": "((auth_user_role() = 'platform_admin'::user_role) OR (auth.role() = 'service_role'::text))",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "ai_activity_logs",
+    "policy_name": "Tenants can only view their own AI logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "SELECT",
+    "using_expression": "(tenant_id = auth_user_tenant_id())",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "ai_agents",
+    "policy_name": "Platform Admins have full access to ai_agents",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "ALL",
+    "using_expression": "((auth_user_role() = 'platform_admin'::user_role) OR (auth.role() = 'service_role'::text))",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "ai_agents",
+    "policy_name": "Tenants can view their own AI agents",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "operation": "SELECT",
+    "using_expression": "(tenant_id = auth_user_tenant_id())",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "appointments",
+    "policy_name": "Platform Admins have full access to appointments",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "ALL",
+    "using_expression": "((auth_user_role() = 'platform_admin'::user_role) OR (auth.role() = 'service_role'::text))",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "appointments",
+    "policy_name": "Tenants can only access their own appointments",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "ALL",
+    "using_expression": "(tenant_id = auth_user_tenant_id())",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "contacts",
+    "policy_name": "Platform Admins have full access to contacts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "ALL",
+    "using_expression": "((auth_user_role() = 'platform_admin'::user_role) OR (auth.role() = 'service_role'::text))",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "contacts",
+    "policy_name": "Tenants can only access their own contacts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "ALL",
+    "using_expression": "(tenant_id = auth_user_tenant_id())",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "service_jobs",
+    "policy_name": "Platform Admins have full access to service_jobs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "ALL",
+    "using_expression": "((auth_user_role() = 'platform_admin'::user_role) OR (auth.role() = 'service_role'::text))",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "service_jobs",
+    "policy_name": "Tenants can only access their own service jobs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "ALL",
+    "using_expression": "(tenant_id = auth_user_tenant_id())",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "tenants",
+    "policy_name": "Platform Admins have full access to tenants",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "ALL",
+    "using_expression": "((auth_user_role() = 'platform_admin'::user_role) OR (auth.role() = 'service_role'::text))",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "tenants",
+    "policy_name": "Tenants can only view their own organization",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "SELECT",
+    "using_expression": "(id = auth_user_tenant_id())",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "users",
+    "policy_name": "Platform Admins have full access to users",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "operation": "ALL",
+    "using_expression": "((auth_user_role() = 'platform_admin'::user_role) OR (auth.role() = 'service_role'::text))",
+    "check_expression": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "users",
+    "policy_name": "Tenants can view staff in their organization",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "operation": "SELECT",
+    "using_expression": "(tenant_id = auth_user_tenant_id())",
+    "check_expression": null
+  }
+]

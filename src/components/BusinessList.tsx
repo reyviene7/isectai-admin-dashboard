@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutGrid, List, Stethoscope, Wrench, ArrowRight } from 'lucide-react';
 import type { Tenant, AIAgent, Appointment, ServiceJob } from '../lib/types';
 import { BusinessCard } from './BusinessCard';
+import { Pagination } from './Pagination';
 
 interface BusinessListProps {
   tenants: Tenant[];
@@ -24,15 +25,21 @@ export const BusinessList: React.FC<BusinessListProps> = ({
 }) => {
   const [filter, setFilter] = useState<'all' | 'medical_clinic' | 'service_business'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
 
   const medicalCount = tenants.filter((t) => t.industry === 'medical_clinic').length;
   const serviceCount = tenants.filter((t) => t.industry === 'service_business').length;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchQuery]);
 
   const filteredTenants = tenants.filter((tenant) => {
     if (filter === 'medical_clinic' && tenant.industry !== 'medical_clinic') return false;
     if (filter === 'service_business' && tenant.industry !== 'service_business') return false;
 
-    if (searchQuery.trim()) {
+    if (searchQuery && searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
         tenant.name.toLowerCase().includes(q) ||
@@ -42,6 +49,12 @@ export const BusinessList: React.FC<BusinessListProps> = ({
     }
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredTenants.length / pageSize));
+  const paginatedTenants = filteredTenants.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -126,25 +139,37 @@ export const BusinessList: React.FC<BusinessListProps> = ({
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No businesses match your search.</p>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="business-grid">
-          {filteredTenants.map((tenant) => {
-            const agent = agents.find((a) => a.tenant_id === tenant.id);
-            const apptsCount = appointments.filter((a) => a.tenant_id === tenant.id).length;
-            const jobsCount = serviceJobs.filter((j) => j.tenant_id === tenant.id).length;
+        <>
+          <div className="business-grid">
+            {paginatedTenants.map((tenant) => {
+              const agent = agents.find((a) => a.tenant_id === tenant.id);
+              const apptsCount = appointments.filter((a) => a.tenant_id === tenant.id).length;
+              const jobsCount = serviceJobs.filter((j) => j.tenant_id === tenant.id).length;
 
-            return (
-              <BusinessCard
-                key={tenant.id}
-                tenant={tenant}
-                agent={agent}
-                appointmentsCount={apptsCount}
-                serviceJobsCount={jobsCount}
-                onSelect={onSelectTenant}
-                onSimulateCall={onSimulateCall}
-              />
-            );
-          })}
-        </div>
+              return (
+                <BusinessCard
+                  key={tenant.id}
+                  tenant={tenant}
+                  agent={agent}
+                  appointmentsCount={apptsCount}
+                  serviceJobsCount={jobsCount}
+                  onSelect={onSelectTenant}
+                  onSimulateCall={onSimulateCall}
+                />
+              );
+            })}
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredTenants.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            itemLabel="businesses"
+            isStandalone={true}
+          />
+        </>
       ) : (
         <div className="clean-table-card">
           <table className="clean-table">
@@ -160,7 +185,7 @@ export const BusinessList: React.FC<BusinessListProps> = ({
               </tr>
             </thead>
             <tbody>
-              {filteredTenants.map((tenant) => {
+              {paginatedTenants.map((tenant) => {
                 const agent = agents.find((a) => a.tenant_id === tenant.id);
                 const isMedical = tenant.industry === 'medical_clinic';
                 const count = isMedical
@@ -202,6 +227,15 @@ export const BusinessList: React.FC<BusinessListProps> = ({
               })}
             </tbody>
           </table>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredTenants.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            itemLabel="businesses"
+          />
         </div>
       )}
     </div>

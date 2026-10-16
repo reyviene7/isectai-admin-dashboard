@@ -20,10 +20,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <nav className="navbar" id="main-navigation">
       <div className="nav-brand">
-        <div className="brand-badge">iS</div>
         <div>
           <div className="brand-title">
-            iSectAI
+            <span className="font-display text-[1.375rem] leading-none font-bold tracking-[-0.02em] text-ink">
+              <span className="text-mark">i</span>Sect
+            </span>
             <span className="brand-pill">Internal Admin</span>
           </div>
         </div>

@@ -57,7 +57,7 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({
   };
 
   return (
-    <div className="clean-modal-overlay" onClick={onClose} id="supabase-modal-overlay">
+    <div className="clean-modal-overlay" id="supabase-modal-overlay">
       <div className="clean-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 580 }}>
         {/* Header */}
         <div className="clean-modal-header">

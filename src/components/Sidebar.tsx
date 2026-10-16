@@ -18,9 +18,9 @@ export type NavTab = 'overview' | 'appointments' | 'dispatches' | 'telemetry' | 
 interface SidebarProps {
   activeTab: NavTab;
   onTabChange: (tab: NavTab) => void;
-  isLiveSupabase: boolean;
+  isLiveSupabase?: boolean;
   latencyMs?: number;
-  onOpenConfig: () => void;
+  onOpenConfig?: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
   totalAppts: number;
@@ -35,9 +35,6 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onTabChange,
-  isLiveSupabase,
-  latencyMs,
-  onOpenConfig,
   theme,
   onToggleTheme,
   totalAppts,
@@ -67,10 +64,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Brand & Mobile Close Button */}
           <div className="brand-section">
             <div className="brand-brand-wrap">
-              <div className="brand-icon">iS</div>
-              <div className="brand-text">
-                <h2>iSectAI</h2>
-                <span>Admin Portal</span>
+              <div className="isect-brand-text-block brand-text">
+                <span className="font-display text-[1.375rem] leading-none font-bold tracking-[-0.02em] text-ink">
+                  <span className="text-mark">i</span>Sect
+                </span>
+                <span className="isect-os-tag">AI</span>
               </div>
             </div>
 
@@ -173,31 +171,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Sidebar Footer */}
         <div className="sidebar-bottom">
-          {/* Single Database Connection Status Pill */}
-          <button
-            className="db-pill"
-            onClick={() => {
-              if (isAdmin) {
-                onOpenConfig();
-              }
-              onCloseMobile();
-            }}
-            title={isAdmin ? 'Click to view or connect live Supabase PostgreSQL' : 'Database managed by Platform Admin'}
-            id="sidebar-db-pill"
-          >
-            <span className={`pulse-dot ${isLiveSupabase ? 'green' : 'amber'}`} />
-            <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-              <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700 }}>
-                {isLiveSupabase ? 'Supabase Live' : 'Local Demo DB'}
-              </span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                {isAdmin
-                  ? isLiveSupabase ? `${latencyMs ?? 42}ms latency` : 'Click to link cloud'
-                  : 'Managed by Admin'}
-              </span>
-            </div>
-          </button>
-
           {/* User Profile, Theme Switcher & Logout */}
           <div className="theme-user-row">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>

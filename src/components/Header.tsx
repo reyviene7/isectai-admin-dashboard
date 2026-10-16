@@ -65,6 +65,22 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const getSearchPlaceholder = () => {
+    switch (activeTab) {
+      case 'appointments':
+        return 'Search doctor, type, department, notes...';
+      case 'dispatches':
+        return 'Search technician, service, address, priority...';
+      case 'telemetry':
+        return 'Search caller, phone, intent, transcript...';
+      case 'staff':
+        return 'Search staff name, email, title, practice...';
+      case 'overview':
+      default:
+        return isAdmin ? 'Search clinics, businesses, phone...' : 'Search businesses...';
+    }
+  };
+
   const { title, subtitle } = getTabTitles();
 
   return (
@@ -87,17 +103,20 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="topbar-actions">
-        {/* Search Input */}
-        <div className="search-bar">
-          <Search size={15} className="search-icon-pos" />
-          <input
-            type="text"
-            placeholder={isAdmin ? 'Search records, clinics...' : 'Search records...'}
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            id="global-search-input"
-          />
-        </div>
+        {/* Contextual Search Input: Shown for tabs with records, hidden for Architecture */}
+        {activeTab !== 'architecture' && (
+          <div className="search-bar">
+            <Search size={15} className="search-icon-pos" />
+            <input
+              type="text"
+              placeholder={getSearchPlaceholder()}
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              id="global-search-input"
+              aria-label={getSearchPlaceholder()}
+            />
+          </div>
+        )}
 
         {/* Primary Action Button: Only Admin has authority to onboard businesses */}
         {isAdmin ? (

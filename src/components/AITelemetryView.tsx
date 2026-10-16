@@ -1,16 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PhoneCall, Clock, Cpu, MessageSquareQuote } from 'lucide-react';
 import type { AIActivityLog, Tenant } from '../lib/types';
+import { Pagination } from './Pagination';
 
 interface AITelemetryViewProps {
   logs: AIActivityLog[];
   tenants: Tenant[];
+  searchQuery?: string;
 }
 
-export const AITelemetryView: React.FC<AITelemetryViewProps> = ({ logs, tenants }) => {
+export const AITelemetryView: React.FC<AITelemetryViewProps> = ({ logs, tenants, searchQuery = '' }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const filteredLogs = logs.filter((log) => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const tenant = tenants.find((t) => t.id === log.tenant_id);
+      const matchCaller = log.caller_name.toLowerCase().includes(q);
+      const matchPhone = log.caller_phone.toLowerCase().includes(q);
+      const matchSummary = log.summary.toLowerCase().includes(q);
+      const matchTranscript = log.transcript_snippet.toLowerCase().includes(q);
+      const matchSentiment = log.sentiment.toLowerCase().includes(q);
+      const matchEvent = log.event_type.toLowerCase().includes(q);
+      const matchTenant = tenant?.name.toLowerCase().includes(q) ?? false;
+      return (
+        matchCaller ||
+        matchPhone ||
+        matchSummary ||
+        matchTranscript ||
+        matchSentiment ||
+        matchEvent ||
+        matchTenant
+      );
+    }
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / pageSize));
+  const paginatedLogs = filteredLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', minWidth: 0 }}>
-      {logs.map((log) => {
+      {paginatedLogs.length === 0 ? (
+        <div
+          style={{
+            padding: '48px 20px',
+            textAlign: 'center',
+            background: 'var(--bg-shell)',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--border-light)',
+            color: 'var(--text-muted)'
+          }}
+        >
+          No AI telemetry activity logs recorded yet.
+        </div>
+      ) : (
+        paginatedLogs.map((log) => {
         const tenant = tenants.find((t) => t.id === log.tenant_id);
 
         return (
@@ -155,7 +205,17 @@ export const AITelemetryView: React.FC<AITelemetryViewProps> = ({ logs, tenants 
             </div>
           </div>
         );
-      })}
+      }))}
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filteredLogs.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        itemLabel="telemetry call logs"
+        isStandalone={true}
+      />
     </div>
   );
 };

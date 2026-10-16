@@ -20,23 +20,25 @@ export const AddBusinessModal: React.FC<AddBusinessModalProps> = ({ onClose, onA
     e.preventDefault();
     if (!name.trim()) return;
 
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'business';
+    const uniqueSuffix = Math.random().toString(36).substring(2, 6);
+    const slug = `${baseSlug}-${uniqueSuffix}`;
     onAdd({
-      name,
+      name: name.trim(),
       slug,
       industry,
       subscription_tier: tier,
       status: 'active',
-      phone,
-      email: `contact@${slug}.com`,
+      phone: phone.trim(),
+      email: `contact@${baseSlug}.com`,
       address: '750 Broadway',
-      city,
-      state,
+      city: city.trim(),
+      state: state.trim(),
       postal_code: '10003',
       branding: {
         primary_color: industry === 'medical_clinic' ? '#0ea5e9' : '#f59e0b',
         tagline:
-          tagline ||
+          tagline.trim() ||
           (industry === 'medical_clinic'
             ? 'Specialty Clinical Care & Surgical Practice'
             : '24/7 Priority Field Service & Emergency Repairs')
@@ -52,30 +54,31 @@ export const AddBusinessModal: React.FC<AddBusinessModalProps> = ({ onClose, onA
   };
 
   return (
-    <div className="clean-modal-overlay" onClick={onClose} id="add-business-modal-overlay">
+    <div className="clean-modal-overlay" id="add-business-modal-overlay">
       <div className="clean-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 540 }}>
         {/* Header */}
         <div className="clean-modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div
               style={{
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 borderRadius: 10,
                 background: 'var(--primary-soft)',
                 color: 'var(--primary)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                flexShrink: 0
               }}
             >
               <Building2 size={20} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1.2 }}>
                 Add New Business
               </h3>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
                 Onboard a new clinic or trade service to iSectAI
               </p>
             </div>
@@ -84,211 +87,113 @@ export const AddBusinessModal: React.FC<AddBusinessModalProps> = ({ onClose, onA
           <button
             className="btn-clean-secondary"
             onClick={onClose}
-            style={{ width: 32, height: 32, padding: 0, justifyContent: 'center' }}
+            style={{ width: 32, height: 32, padding: 0, justifyContent: 'center', borderRadius: '50%' }}
             id="close-add-modal-btn"
+            title="Close modal"
           >
             <X size={15} />
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="clean-modal-body">
-          <div style={{ marginBottom: 14 }}>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                color: 'var(--text-secondary)',
-                marginBottom: 4
-              }}
-            >
-              Business Name
-            </label>
-            <input
-              type="text"
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-light)',
-                background: 'var(--bg-shell)',
-                color: 'var(--text-main)',
-                fontSize: '0.86rem',
-                outline: 'none'
-              }}
-              placeholder="e.g. Tribeca Orthopedic Surgery"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              id="new-tenant-name"
-            />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 14 }}>
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: 'var(--text-secondary)',
-                  marginBottom: 4
-                }}
-              >
-                Domain Industry
-              </label>
-              <select
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-light)',
-                  background: 'var(--bg-shell)',
-                  color: 'var(--text-main)',
-                  fontSize: '0.86rem',
-                  outline: 'none'
-                }}
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value as BusinessIndustry)}
-                id="new-tenant-industry"
-              >
-                <option value="medical_clinic">Medical Clinic</option>
-                <option value="service_business">Field Trade Service</option>
-              </select>
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: 'var(--text-secondary)',
-                  marginBottom: 4
-                }}
-              >
-                Tier
-              </label>
-              <select
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-light)',
-                  background: 'var(--bg-shell)',
-                  color: 'var(--text-main)',
-                  fontSize: '0.86rem',
-                  outline: 'none'
-                }}
-                value={tier}
-                onChange={(e) => setTier(e.target.value as SubscriptionTier)}
-                id="new-tenant-tier"
-              >
-                <option value="starter">Starter</option>
-                <option value="growth">Growth</option>
-                <option value="enterprise">Enterprise</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 14 }}>
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: 'var(--text-secondary)',
-                  marginBottom: 4
-                }}
-              >
-                Phone Number
-              </label>
+        {/* Form Body with standard modal structure */}
+        <form onSubmit={handleSubmit} className="modal-form-wrap">
+          <div className="clean-modal-body">
+            {/* Business Name */}
+            <div className="modal-form-group">
+              <label className="modal-label">Business Name</label>
               <input
                 type="text"
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-light)',
-                  background: 'var(--bg-shell)',
-                  color: 'var(--text-main)',
-                  fontSize: '0.86rem',
-                  outline: 'none'
-                }}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                className="modal-input"
+                placeholder="e.g. Tribeca Orthopedic Surgery"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
+                id="new-tenant-name"
               />
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: 'var(--text-secondary)',
-                  marginBottom: 4
-                }}
-              >
-                Location
-              </label>
+            {/* Domain Industry & Tier (2-Col Grid) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">Domain Industry</label>
+                <select
+                  className="modal-select"
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value as BusinessIndustry)}
+                  id="new-tenant-industry"
+                >
+                  <option value="medical_clinic">Medical Clinic</option>
+                  <option value="service_business">Field Trade Service</option>
+                </select>
+              </div>
+
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">Subscription Tier</label>
+                <select
+                  className="modal-select"
+                  value={tier}
+                  onChange={(e) => setTier(e.target.value as SubscriptionTier)}
+                  id="new-tenant-tier"
+                >
+                  <option value="starter">Starter</option>
+                  <option value="growth">Growth</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Phone Number & Location (2-Col Grid) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">Phone Number</label>
+                <input
+                  type="text"
+                  className="modal-input"
+                  placeholder="+1 (212) 555-0199"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  id="new-tenant-phone"
+                />
+              </div>
+
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">Location (City, State)</label>
+                <input
+                  type="text"
+                  className="modal-input"
+                  placeholder="New York, NY"
+                  value={`${city}, ${state}`}
+                  onChange={(e) => {
+                    const parts = e.target.value.split(',');
+                    setCity(parts[0]?.trim() || 'New York');
+                    setState(parts[1]?.trim() || 'NY');
+                  }}
+                  id="new-tenant-location"
+                />
+              </div>
+            </div>
+
+            {/* Tagline */}
+            <div className="modal-form-group" style={{ marginBottom: 8 }}>
+              <label className="modal-label">Tagline (Optional)</label>
               <input
                 type="text"
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-light)',
-                  background: 'var(--bg-shell)',
-                  color: 'var(--text-main)',
-                  fontSize: '0.86rem',
-                  outline: 'none'
-                }}
-                value={`${city}, ${state}`}
-                onChange={(e) => {
-                  const parts = e.target.value.split(',');
-                  setCity(parts[0]?.trim() || 'New York');
-                  setState(parts[1]?.trim() || 'NY');
-                }}
+                className="modal-input"
+                placeholder="e.g. Advanced Sports Medicine & Physical Therapy"
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value)}
+                id="new-tenant-tagline"
               />
+              <span className="modal-helper-text">
+                Used by the autonomous voice agent when warmly greeting callers.
+              </span>
             </div>
           </div>
 
-          <div style={{ marginBottom: 14 }}>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                color: 'var(--text-secondary)',
-                marginBottom: 4
-              }}
-            >
-              Tagline (Optional)
-            </label>
-            <input
-              type="text"
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-light)',
-                background: 'var(--bg-shell)',
-                color: 'var(--text-main)',
-                fontSize: '0.86rem',
-                outline: 'none'
-              }}
-              placeholder="e.g. Advanced Sports Medicine & Physical Therapy"
-              value={tagline}
-              onChange={(e) => setTagline(e.target.value)}
-            />
-          </div>
-
-          <div className="clean-modal-footer" style={{ padding: '16px 0 0 0', marginTop: 14 }}>
-            <button type="button" className="btn-clean-secondary" onClick={onClose}>
+          {/* Clean Modal Footer */}
+          <div className="clean-modal-footer">
+            <button type="button" className="btn-clean-secondary" onClick={onClose} id="cancel-add-tenant-btn">
               Cancel
             </button>
             <button type="submit" className="btn-clean-primary" id="confirm-add-tenant-btn">

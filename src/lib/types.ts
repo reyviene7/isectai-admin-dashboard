@@ -1,7 +1,7 @@
 export type BusinessIndustry = 'medical_clinic' | 'service_business';
 export type TenantStatus = 'active' | 'onboarding' | 'paused' | 'suspended';
 export type SubscriptionTier = 'starter' | 'growth' | 'enterprise';
-export type UserRole = 'platform_admin' | 'business_staff';
+export type UserRole = 'platform_admin' | 'business_staff' | 'business_owner' | 'practitioner';
 
 export interface UserAccount {
   id: string;

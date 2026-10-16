@@ -5,24 +5,45 @@ const STORAGE_URL_KEY = 'isectai_supabase_url';
 const STORAGE_ANON_KEY = 'isectai_supabase_anon_key';
 
 export function getStoredSupabaseConfig() {
-  const envUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+  const envUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined || '').trim();
+  const envKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined || '').trim();
 
-  const localUrl = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_URL_KEY) : null;
-  const localKey = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_ANON_KEY) : null;
+  const localUrl = (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_URL_KEY) || '' : '').trim();
+  const localKey = (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_ANON_KEY) || '' : '').trim();
 
-  const url = (localUrl || envUrl || '').trim();
-  const anonKey = (localKey || envKey || '').trim();
-
-  const isConfigured = Boolean(
-    url &&
-    anonKey &&
-    url.startsWith('http') &&
-    url.includes('.supabase.co') &&
-    !url.includes('YOUR_PROJECT')
+  const isEnvValid = Boolean(
+    envUrl &&
+    envKey &&
+    envUrl.startsWith('http') &&
+    !envUrl.includes('your-project') &&
+    !envUrl.includes('YOUR_PROJECT')
   );
 
-  return { url, anonKey, isConfigured };
+  const isLocalValid = Boolean(
+    localUrl &&
+    localKey &&
+    localUrl.startsWith('http') &&
+    !localUrl.includes('your-project') &&
+    !localUrl.includes('YOUR_PROJECT')
+  );
+
+  const rawUrl = isEnvValid ? envUrl : (isLocalValid ? localUrl : (envUrl || localUrl));
+  const anonKey = isEnvValid ? envKey : (isLocalValid ? localKey : (envKey || localKey));
+
+  // In browser, route requests through same-origin reverse proxy /api/cloud
+  // to mask the raw Supabase URL and eliminate CORS preflight requests in the Network tab
+  const isBrowser = typeof window !== 'undefined' && Boolean(window.location?.origin);
+  const url = isBrowser ? `${window.location.origin}/api/cloud` : rawUrl;
+
+  const isConfigured = Boolean(
+    rawUrl &&
+    anonKey &&
+    rawUrl.startsWith('http') &&
+    !rawUrl.includes('your-project') &&
+    !rawUrl.includes('YOUR_PROJECT')
+  );
+
+  return { url, rawUrl, anonKey, isConfigured };
 }
 
 export function saveStoredSupabaseConfig(url: string, anonKey: string) {

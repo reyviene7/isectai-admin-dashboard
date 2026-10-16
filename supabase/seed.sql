@@ -1,9 +1,14 @@
 -- ==============================================================================================
 -- iSectAI Platform: Fictional Sample Data Seed
+-- Engine: PostgreSQL 15+ (Designed for Supabase)
 -- Prepopulates:
---   1. Apex Dental & Maxillofacial Care (Medical Clinic)
---   2. PulsePoint Cardiology & Vascular Center (Medical Clinic)
---   3. VoltFlow HVAC, Plumbing & Electrical (Service Business)
+--   1. Tenants (Apex Dental NYC, PulsePoint Cardiology, VoltFlow Electric & HVAC)
+--   2. Users (Platform Admin, Practice Owners, Staff Receptionists, Dispatchers)
+--   3. AI Agents (Voice Receptionists, Triage Coordinators, Smart Dispatchers)
+--   4. Polymorphic Contacts (Medical Patients & Service Customers)
+--   5. Clinical Appointments (Dental Surgery, Orthodontics, Cardiology, Ultrasound)
+--   6. Field Service Jobs (Commercial Refrigeration, 200A Panel Upgrades, Hydro-Jetting)
+--   7. AI Telemetry Logs (Live Transcripts, Token Consumption, Sentiment Scores)
 -- ==============================================================================================
 
 -- 1. INSERT TENANTS
@@ -22,7 +27,7 @@ VALUES
     'New York',
     'NY',
     '10017',
-    '{"primary_color": "#0ea5e9", "accent_color": "#38bdf8", "tagline": "Advanced Oral Surgery & Aesthetic Dentistry"}'::jsonb,
+    '{"primary_color": "#2563eb", "accent_color": "#38bdf8", "tagline": "Advanced Oral Surgery & Aesthetic Dentistry"}'::jsonb,
     '{"operating_hours": "07:30 - 18:30", "timezone": "America/New_York", "ai_auto_booking": true, "emergency_triage_enabled": true}'::jsonb
 ),
 (
@@ -54,97 +59,172 @@ VALUES
     'Brooklyn',
     'NY',
     '11216',
-    '{"primary_color": "#f59e0b", "accent_color": "#fbbf24", "tagline": "24/7 Smart Field Service & Rapid Emergency Dispatch"}'::jsonb,
+    '{"primary_color": "#d97706", "accent_color": "#fbbf24", "tagline": "24/7 Smart Field Service & Rapid Emergency Dispatch"}'::jsonb,
     '{"operating_hours": "24/7 Rapid Response", "timezone": "America/New_York", "ai_auto_booking": true, "after_hours_emergency": true}'::jsonb
 )
-ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
+ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    slug = EXCLUDED.slug,
+    industry = EXCLUDED.industry,
+    subscription_tier = EXCLUDED.subscription_tier,
+    status = EXCLUDED.status,
+    phone = EXCLUDED.phone,
+    email = EXCLUDED.email,
+    address = EXCLUDED.address,
+    city = EXCLUDED.city,
+    state = EXCLUDED.state,
+    postal_code = EXCLUDED.postal_code,
+    branding = EXCLUDED.branding,
+    business_settings = EXCLUDED.business_settings;
 
--- 2. INSERT USERS (Staff & Platform Admin)
-INSERT INTO users (id, tenant_id, email, full_name, role, phone, is_active)
+-- 2. INSERT USERS (Staff & Platform Super Admins)
+INSERT INTO users (id, tenant_id, email, password, full_name, role, title, phone, is_active)
 VALUES
+-- Platform Super Administrator
 (
-    'u0000000-0000-4000-8000-000000000000',
+    'd0000000-0000-4000-8000-000000000000',
     NULL,
     'admin@isectai.internal',
-    'Sarah Chen (iSectAI Chief Architect)',
+    'password123',
+    'Sarah Chen',
     'platform_admin',
+    'Platform Super Admin & AI Architect',
     '+1 (212) 555-0100',
     true
 ),
+-- Apex Dental Staff
 (
-    'u1111111-1111-4111-8111-111111111111',
+    'd1111111-1111-4111-8111-111111111111',
     'a1111111-1111-4111-8111-111111111111',
-    'dr.vance@apexdentalnyc.com',
-    'Dr. Julian Vance, DDS',
-    'business_owner',
+    'staff@apexdental.com',
+    'password123',
+    'Elena Ramos',
+    'business_staff',
+    'Clinic Front-Desk & Triage Coordinator',
     '+1 (212) 555-0145',
     true
 ),
 (
-    'u2222222-2222-4222-8222-222222222222',
-    'b2222222-2222-4222-8222-222222222222',
-    'dr.patel@pulsepointcardio.org',
-    'Dr. Anaya Patel, MD, FACC',
+    'd1111111-2222-4111-8111-111111111111',
+    'a1111111-1111-4111-8111-111111111111',
+    'dr.vance@apexdentalnyc.com',
+    'password123',
+    'Dr. Julian Vance, DDS',
     'business_owner',
+    'Chief Oral Surgeon & Managing Partner',
+    '+1 (212) 555-0146',
+    true
+),
+-- PulsePoint Cardiology Staff
+(
+    'd2222222-2222-4222-8222-222222222222',
+    'b2222222-2222-4222-8222-222222222222',
+    'staff@pulsepoint.org',
+    'password123',
+    'Dr. Julian Vance',
+    'business_staff',
+    'Clinical Director & Cardiologist',
     '+1 (212) 555-0190',
     true
 ),
 (
-    'u3333333-3333-4333-8333-333333333333',
-    'c3333333-3333-4333-8333-333333333333',
-    'mike.ross@voltflowservices.com',
-    'Mike Ross (Field Ops Director)',
+    'd2222222-3333-4222-8222-222222222222',
+    'b2222222-2222-4222-8222-222222222222',
+    'dr.patel@pulsepointcardio.org',
+    'password123',
+    'Dr. Anaya Patel, MD, FACC',
     'business_owner',
+    'Chief of Cardiovascular Diagnostics',
+    '+1 (212) 555-0191',
+    true
+),
+-- VoltFlow Field Operations Staff
+(
+    'd3333333-3333-4333-8333-333333333333',
+    'c3333333-3333-4333-8333-333333333333',
+    'staff@voltflow.com',
+    'password123',
+    'Marcus Vance',
+    'business_staff',
+    'Field Service Dispatch Supervisor',
     '+1 (718) 555-0925',
     true
+),
+(
+    'd3333333-4444-4333-8333-333333333333',
+    'c3333333-3333-4333-8333-333333333333',
+    'mike.ross@voltflowservices.com',
+    'password123',
+    'Mike Ross',
+    'business_owner',
+    'Operations Director & Master Electrician',
+    '+1 (718) 555-0926',
+    true
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    tenant_id = EXCLUDED.tenant_id,
+    email = EXCLUDED.email,
+    password = EXCLUDED.password,
+    full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    title = EXCLUDED.title,
+    phone = EXCLUDED.phone,
+    is_active = EXCLUDED.is_active;
 
 -- 3. INSERT AI AGENTS
 INSERT INTO ai_agents (id, tenant_id, name, agent_type, phone_number, voice_profile, llm_model, system_prompt, is_active, call_forward_enabled, total_calls_handled)
 VALUES
 (
-    'g1111111-1111-4111-8111-111111111111',
+    'e1111111-1111-4111-8111-111111111111',
     'a1111111-1111-4111-8111-111111111111',
     'Apex Voice Receptionist & Emergency Triage',
     'voice_receptionist',
     '+1 (212) 555-0144',
     'en-US-Neural2-F',
     'gpt-4o',
-    'You are the intelligent front-desk receptionist for Apex Dental. You warmly greet patients, verify dental insurance provider, assess tooth pain emergency severity on a 1-10 scale, and book time with Dr. Vance or Dr. Reed.',
+    'You are the intelligent front-desk receptionist for Apex Dental & Maxillofacial Care. You warmly greet patients, verify dental insurance provider, assess tooth pain emergency severity on a 1-10 scale, and book time with Dr. Vance or Dr. Reed.',
     true,
     true,
     1482
 ),
 (
-    'g2222222-2222-4222-8222-222222222222',
+    'e2222222-2222-4222-8222-222222222222',
     'b2222222-2222-4222-8222-222222222222',
     'PulsePoint Clinical Screening AI',
     'triage_assistant',
     '+1 (212) 555-0189',
     'en-US-Journey-O',
     'gpt-4o',
-    'You are PulsePoint Cardio clinical scheduling coordinator. Adhere strictly to HIPAA guidelines. Identify if caller reports acute chest pain or shortness of breath—if so, immediately trigger 911 protocol. Otherwise book cardiac consults.',
+    'You are PulsePoint Cardio clinical scheduling coordinator. Adhere strictly to HIPAA guidelines. Identify if caller reports acute chest pain or shortness of breath—if so, immediately trigger 911 protocol. Otherwise book cardiac diagnostics.',
     true,
     true,
     974
 ),
 (
-    'g3333333-3333-4333-8333-333333333333',
+    'e3333333-3333-4333-8333-333333333333',
     'c3333333-3333-4333-8333-333333333333',
     'VoltFlow 24/7 Smart Dispatcher',
     'dispatch_coordinator',
     '+1 (718) 555-0922',
     'en-US-Neural2-D',
     'gpt-4o',
-    'You are the dispatch coordinator for VoltFlow HVAC, Plumbing & Electrical. Collect problem description, address, property type (commercial vs residential), provide rough diagnostic estimate bracket, and dispatch on-call techs.',
+    'You are the dispatch coordinator for VoltFlow HVAC, Plumbing & Electrical. Collect problem description, address, property type (commercial vs residential), provide rough diagnostic estimate bracket, and dispatch on-call field technicians.',
     true,
     true,
     2150
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    agent_type = EXCLUDED.agent_type,
+    phone_number = EXCLUDED.phone_number,
+    voice_profile = EXCLUDED.voice_profile,
+    llm_model = EXCLUDED.llm_model,
+    system_prompt = EXCLUDED.system_prompt,
+    is_active = EXCLUDED.is_active,
+    call_forward_enabled = EXCLUDED.call_forward_enabled,
+    total_calls_handled = EXCLUDED.total_calls_handled;
 
--- 4. INSERT CONTACTS
+-- 4. INSERT POLYMORPHIC CONTACTS (Patients & Customers)
 INSERT INTO contacts (id, tenant_id, full_name, email, phone, address, contact_type, industry_attributes)
 VALUES
 -- Apex Dental Patients
@@ -199,7 +279,7 @@ VALUES
     'patient',
     '{"dob": "1966-08-22", "insurance_provider": "Empire BlueCross BlueShield", "primary_condition": "Aortic Valve Surveillance"}'::jsonb
 ),
--- VoltFlow Customers
+-- VoltFlow Field Service Customers
 (
     'c3010101-3333-4333-8333-333333333333',
     'c3333333-3333-4333-8333-333333333333',
@@ -220,13 +300,19 @@ VALUES
     'customer',
     '{"property_type": "residential_multi_family", "equipment": "Navien Tankless Boiler + 200A Electrical Panel"}'::jsonb
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    email = EXCLUDED.email,
+    phone = EXCLUDED.phone,
+    address = EXCLUDED.address,
+    contact_type = EXCLUDED.contact_type,
+    industry_attributes = EXCLUDED.industry_attributes;
 
--- 5. INSERT APPOINTMENTS (Medical Clinic records)
+-- 5. INSERT CLINICAL APPOINTMENTS (Medical Clinic records)
 INSERT INTO appointments (id, tenant_id, contact_id, provider_name, department, appointment_type, scheduled_start, scheduled_end, status, chief_complaint, ai_triage_summary, hipaa_notes_masked, room_number, booked_via_ai)
 VALUES
 (
-    'm1010101-1111-4111-8111-111111111111',
+    'f1010101-1111-4111-8111-111111111111',
     'a1111111-1111-4111-8111-111111111111',
     'c1010101-1111-4111-8111-111111111111',
     'Dr. Julian Vance, DDS',
@@ -242,7 +328,7 @@ VALUES
     true
 ),
 (
-    'm1020202-1111-4111-8111-111111111111',
+    'f1020202-1111-4111-8111-111111111111',
     'a1111111-1111-4111-8111-111111111111',
     'c1020202-1111-4111-8111-111111111111',
     'Dr. Elena Reed, DMD',
@@ -258,7 +344,7 @@ VALUES
     true
 ),
 (
-    'm1030303-1111-4111-8111-111111111111',
+    'f1030303-1111-4111-8111-111111111111',
     'a1111111-1111-4111-8111-111111111111',
     'c1030303-1111-4111-8111-111111111111',
     'Dr. Elena Reed, DMD',
@@ -274,7 +360,7 @@ VALUES
     true
 ),
 (
-    'm2010101-2222-4222-8222-222222222222',
+    'f2010101-2222-4222-8222-222222222222',
     'b2222222-2222-4222-8222-222222222222',
     'c2010101-2222-4222-8222-222222222222',
     'Dr. Anaya Patel, MD, FACC',
@@ -290,7 +376,7 @@ VALUES
     true
 ),
 (
-    'm2020202-2222-4222-8222-222222222222',
+    'f2020202-2222-4222-8222-222222222222',
     'b2222222-2222-4222-8222-222222222222',
     'c2020202-2222-4222-8222-222222222222',
     'Dr. Samuel Sterling, MD',
@@ -305,13 +391,20 @@ VALUES
     'Ultrasound Suite 3',
     true
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    status = EXCLUDED.status,
+    scheduled_start = EXCLUDED.scheduled_start,
+    scheduled_end = EXCLUDED.scheduled_end,
+    chief_complaint = EXCLUDED.chief_complaint,
+    ai_triage_summary = EXCLUDED.ai_triage_summary,
+    hipaa_notes_masked = EXCLUDED.hipaa_notes_masked,
+    room_number = EXCLUDED.room_number;
 
--- 6. INSERT SERVICE JOBS (Service Business records)
+-- 6. INSERT FIELD SERVICE JOBS (Service Business records)
 INSERT INTO service_jobs (id, tenant_id, contact_id, technician_name, service_type, priority, status, scheduled_for, estimated_cost, final_cost, dispatch_address, ai_intake_notes, parts_required, booked_via_ai)
 VALUES
 (
-    's3010101-3333-4333-8333-333333333333',
+    '53010101-3333-4333-8333-333333333333',
     'c3333333-3333-4333-8333-333333333333',
     'c3010101-3333-4333-8333-333333333333',
     'Tyler Vance (Master HVAC Tech)',
@@ -327,7 +420,7 @@ VALUES
     true
 ),
 (
-    's3020202-3333-4333-8333-333333333333',
+    '53020202-3333-4333-8333-333333333333',
     'c3333333-3333-4333-8333-333333333333',
     'c3020202-3333-4333-8333-333333333333',
     'Carlos Mendez (Licensed Electrician)',
@@ -343,7 +436,7 @@ VALUES
     true
 ),
 (
-    's3030303-3333-4333-8333-333333333333',
+    '53030303-3333-4333-8333-333333333333',
     'c3333333-3333-4333-8333-333333333333',
     'c3020202-3333-4333-8333-333333333333',
     'Derrick Washington (Senior Plumber)',
@@ -358,15 +451,25 @@ VALUES
     '["Bio-Clean Drain Enzyme Treatment", "4-inch Cleanout Plug"]'::jsonb,
     true
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    technician_name = EXCLUDED.technician_name,
+    service_type = EXCLUDED.service_type,
+    priority = EXCLUDED.priority,
+    status = EXCLUDED.status,
+    scheduled_for = EXCLUDED.scheduled_for,
+    estimated_cost = EXCLUDED.estimated_cost,
+    final_cost = EXCLUDED.final_cost,
+    dispatch_address = EXCLUDED.dispatch_address,
+    ai_intake_notes = EXCLUDED.ai_intake_notes,
+    parts_required = EXCLUDED.parts_required;
 
 -- 7. INSERT AI ACTIVITY TELEMETRY LOGS
 INSERT INTO ai_activity_logs (id, tenant_id, agent_id, caller_phone, caller_name, event_type, duration_seconds, tokens_used, estimated_cost, sentiment, summary, transcript_snippet, created_at)
 VALUES
 (
-    'l1010101-1111-4111-8111-111111111111',
+    '11010101-1111-4111-8111-111111111111',
     'a1111111-1111-4111-8111-111111111111',
-    'g1111111-1111-4111-8111-111111111111',
+    'e1111111-1111-4111-8111-111111111111',
     '+1 (917) 555-3810',
     'Eleanor Wright',
     'voice_call',
@@ -379,9 +482,9 @@ VALUES
     timezone('utc', now() - interval '45 minutes')
 ),
 (
-    'l2010101-2222-4222-8222-222222222222',
+    '12010101-2222-4222-8222-222222222222',
     'b2222222-2222-4222-8222-222222222222',
-    'g2222222-2222-4222-8222-222222222222',
+    'e2222222-2222-4222-8222-222222222222',
     '+1 (212) 555-9014',
     'Arthur Pendelton',
     'voice_call',
@@ -394,9 +497,9 @@ VALUES
     timezone('utc', now() - interval '2 hours')
 ),
 (
-    'l3010101-3333-4333-8333-333333333333',
+    '13010101-3333-4333-8333-333333333333',
     'c3333333-3333-4333-8333-333333333333',
-    'g3333333-3333-4333-8333-333333333333',
+    'e3333333-3333-4333-8333-333333333333',
     '+1 (212) 555-4491',
     'Jason Lee (Hudson Bistro)',
     'emergency_triage',
@@ -408,4 +511,10 @@ VALUES
     'Caller: "Our walk-in is up to 50 degrees, we have $14,000 in seafood inventory at risk!" -> AI: "Understood, Jason. I am dispatching our master refrigeration tech Tyler Vance immediately under Emergency Priority Code 1..."',
     timezone('utc', now() - interval '1 hour')
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    duration_seconds = EXCLUDED.duration_seconds,
+    tokens_used = EXCLUDED.tokens_used,
+    estimated_cost = EXCLUDED.estimated_cost,
+    sentiment = EXCLUDED.sentiment,
+    summary = EXCLUDED.summary,
+    transcript_snippet = EXCLUDED.transcript_snippet;

@@ -6,9 +6,11 @@ import {
   Bot,
   PhoneCall,
   Sparkles,
-  MapPin
+  MapPin,
+  Pencil,
+  Trash2
 } from 'lucide-react';
-import type { Tenant, AIAgent, Appointment, ServiceJob, AIActivityLog } from '../lib/types';
+import type { Tenant, AIAgent, Appointment, ServiceJob, AIActivityLog, SubscriptionTier, TenantStatus } from '../lib/types';
 
 interface BusinessDetailDrawerProps {
   tenant: Tenant | null;
@@ -18,6 +20,9 @@ interface BusinessDetailDrawerProps {
   aiLogs: AIActivityLog[];
   onClose: () => void;
   onSimulateCall: (tenant: Tenant) => void;
+  onUpdateTenant?: (id: string, updates: Partial<Tenant>) => Promise<void>;
+  onDeleteTenant?: (id: string) => Promise<void>;
+  isAdmin?: boolean;
 }
 
 export const BusinessDetailDrawer: React.FC<BusinessDetailDrawerProps> = ({
@@ -27,11 +32,17 @@ export const BusinessDetailDrawer: React.FC<BusinessDetailDrawerProps> = ({
   serviceJobs,
   aiLogs,
   onClose,
-  onSimulateCall
+  onSimulateCall,
+  onUpdateTenant,
+  onDeleteTenant,
+  isAdmin = false
 }) => {
+  const [activeTab, setActiveTab] = useState<'records' | 'agent' | 'logs'>('records');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   if (!tenant) return null;
 
-  const [activeTab, setActiveTab] = useState<'records' | 'agent' | 'logs'>('records');
   const isMedical = tenant.industry === 'medical_clinic';
 
   const tenantAppointments = appointments.filter((a) => a.tenant_id === tenant.id);
@@ -39,7 +50,7 @@ export const BusinessDetailDrawer: React.FC<BusinessDetailDrawerProps> = ({
   const tenantLogs = aiLogs.filter((l) => l.tenant_id === tenant.id);
 
   return (
-    <div className="clean-drawer-backdrop" onClick={onClose} id="detail-drawer-backdrop">
+    <div className="clean-drawer-backdrop" id="detail-drawer-backdrop">
       <div className="clean-drawer" onClick={(e) => e.stopPropagation()} id="detail-drawer-panel">
         {/* Top Header Banner */}
         <div className="drawer-top-banner">
@@ -80,14 +91,38 @@ export const BusinessDetailDrawer: React.FC<BusinessDetailDrawerProps> = ({
             </div>
           </div>
 
-          <button
-            className="btn-clean-secondary"
-            onClick={onClose}
-            style={{ width: 34, height: 34, padding: 0, justifyContent: 'center' }}
-            id="close-drawer-btn"
-          >
-            <X size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {isAdmin && onUpdateTenant && (
+              <button
+                className="appt-action-btn edit-btn"
+                onClick={() => setIsEditing(true)}
+                title="Edit business details"
+                style={{ padding: '6px 12px' }}
+              >
+                <Pencil size={13} />
+                <span>Edit</span>
+              </button>
+            )}
+            {isAdmin && onDeleteTenant && (
+              <button
+                className="appt-action-btn delete-btn"
+                onClick={() => setIsDeleting(true)}
+                title="Delete business"
+                style={{ padding: '6px 12px' }}
+              >
+                <Trash2 size={13} />
+                <span>Delete</span>
+              </button>
+            )}
+            <button
+              className="btn-clean-secondary"
+              onClick={onClose}
+              style={{ width: 34, height: 34, padding: 0, justifyContent: 'center' }}
+              id="close-drawer-btn"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Clean Tabs */}
@@ -404,6 +439,365 @@ export const BusinessDetailDrawer: React.FC<BusinessDetailDrawerProps> = ({
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Edit Business Modal */}
+      {isEditing && (
+        <EditBusinessModal
+          tenant={tenant}
+          onClose={() => setIsEditing(false)}
+          onSave={async (updates) => {
+            if (onUpdateTenant) {
+              await onUpdateTenant(tenant.id, updates);
+            }
+            setIsEditing(false);
+          }}
+        />
+      )}
+
+      {/* Delete Business Confirmation Modal */}
+      {isDeleting && (
+        <DeleteBusinessModal
+          tenant={tenant}
+          onClose={() => setIsDeleting(false)}
+          onConfirm={async () => {
+            if (onDeleteTenant) {
+              await onDeleteTenant(tenant.id);
+            }
+            setIsDeleting(false);
+            onClose();
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+/* ==============================================================================================
+   SUB-COMPONENT: EDIT BUSINESS MODAL
+   ============================================================================================== */
+interface EditBusinessModalProps {
+  tenant: Tenant;
+  onClose: () => void;
+  onSave: (updates: Partial<Tenant>) => Promise<void>;
+}
+
+const EditBusinessModal: React.FC<EditBusinessModalProps> = ({ tenant, onClose, onSave }) => {
+  const [name, setName] = useState(tenant.name);
+  const [phone, setPhone] = useState(tenant.phone || '');
+  const [email, setEmail] = useState(tenant.email || '');
+  const [address, setAddress] = useState(tenant.address || '');
+  const [city, setCity] = useState(tenant.city || '');
+  const [state, setState] = useState(tenant.state || '');
+  const [postalCode, setPostalCode] = useState(tenant.postal_code || '');
+  const [tier, setTier] = useState<SubscriptionTier>(tenant.subscription_tier);
+  const [status, setStatus] = useState<TenantStatus>(tenant.status);
+  const [tagline, setTagline] = useState(tenant.branding?.tagline || '');
+  const [operatingHours, setOperatingHours] = useState(tenant.business_settings?.operating_hours || '08:00 - 18:00');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    setLoading(true);
+    try {
+      await onSave({
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        address: address.trim(),
+        city: city.trim(),
+        state: state.trim(),
+        postal_code: postalCode.trim(),
+        subscription_tier: tier,
+        status,
+        branding: {
+          ...tenant.branding,
+          tagline: tagline.trim()
+        },
+        business_settings: {
+          ...tenant.business_settings,
+          operating_hours: operatingHours.trim()
+        }
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="clean-modal-overlay" id="edit-business-modal-overlay">
+      <div className="clean-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 540 }}>
+        <div className="clean-modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                background: 'var(--primary-soft)',
+                color: 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+            >
+              <Pencil size={18} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+                Edit Business Profile
+              </h3>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+                Update practice parameters, subscription tier, and contact information
+              </p>
+            </div>
+          </div>
+          <button className="clean-modal-close" onClick={onClose} disabled={loading}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="modal-form-wrap">
+          <div className="clean-modal-body" style={{ maxHeight: 'calc(85vh - 140px)', overflowY: 'auto' }}>
+            {/* Business Name */}
+            <div className="modal-form-group">
+              <label className="modal-label">Business / Clinic Name</label>
+              <input
+                type="text"
+                className="modal-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Phone & Email (2-Col) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">Phone</label>
+                <input
+                  type="text"
+                  className="modal-input"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">Email</label>
+                <input
+                  type="email"
+                  className="modal-input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Address */}
+            <div className="modal-form-group">
+              <label className="modal-label">Street Address</label>
+              <input
+                type="text"
+                className="modal-input"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+            </div>
+
+            {/* City, State, Postal Code (3-Col) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">City</label>
+                <input
+                  type="text"
+                  className="modal-input"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                />
+              </div>
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">State</label>
+                <input
+                  type="text"
+                  className="modal-input"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                />
+              </div>
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">Postal Code</label>
+                <input
+                  type="text"
+                  className="modal-input"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Subscription Tier & Status (2-Col) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">Subscription Tier</label>
+                <select
+                  className="modal-input"
+                  value={tier}
+                  onChange={(e) => setTier(e.target.value as SubscriptionTier)}
+                >
+                  <option value="starter">Starter</option>
+                  <option value="growth">Growth</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+              <div className="modal-form-group" style={{ marginBottom: 0 }}>
+                <label className="modal-label">Operating Status</label>
+                <select
+                  className="modal-input"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as TenantStatus)}
+                >
+                  <option value="active">Active</option>
+                  <option value="onboarding">Onboarding</option>
+                  <option value="paused">Paused</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Tagline */}
+            <div className="modal-form-group">
+              <label className="modal-label">Branding Tagline</label>
+              <input
+                type="text"
+                className="modal-input"
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value)}
+                placeholder="e.g. Specialty Clinical Care & Surgical Practice"
+              />
+            </div>
+
+            {/* Operating Hours */}
+            <div className="modal-form-group" style={{ marginBottom: 0 }}>
+              <label className="modal-label">Operating Hours</label>
+              <input
+                type="text"
+                className="modal-input"
+                value={operatingHours}
+                onChange={(e) => setOperatingHours(e.target.value)}
+                placeholder="e.g. 08:00 - 18:00"
+              />
+            </div>
+          </div>
+
+          <div className="clean-modal-footer">
+            <button type="button" className="btn-clean-secondary" onClick={onClose} disabled={loading}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-clean-primary" disabled={loading}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+/* ==============================================================================================
+   SUB-COMPONENT: DELETE BUSINESS MODAL
+   ============================================================================================== */
+interface DeleteBusinessModalProps {
+  tenant: Tenant;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+}
+
+const DeleteBusinessModal: React.FC<DeleteBusinessModalProps> = ({ tenant, onClose, onConfirm }) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await onConfirm();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="clean-modal-overlay" id="delete-business-modal-overlay">
+      <div className="clean-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
+        <div className="clean-modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                background: '#fee2e2',
+                color: '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+            >
+              <Trash2 size={18} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+                Delete Business
+              </h3>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+                Permanently decommission this organization
+              </p>
+            </div>
+          </div>
+          <button className="clean-modal-close" onClick={onClose} disabled={loading}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="clean-modal-body">
+          <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+            Are you sure you want to delete <strong>{tenant.name}</strong>? This action will cascade delete all linked appointments, work orders, AI agents, and staff accounts directly from PostgreSQL.
+          </p>
+
+          <div
+            style={{
+              marginTop: 14,
+              padding: 12,
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-subtle)',
+              border: '1px solid var(--border-light)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4
+            }}
+          >
+            <strong style={{ fontSize: '0.88rem', color: 'var(--text-main)' }}>
+              {tenant.name}
+            </strong>
+            <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+              Industry: {tenant.industry === 'medical_clinic' ? 'Medical Clinic' : 'Field Service'} • {tenant.subscription_tier} tier
+            </span>
+            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+              Phone: {tenant.phone} • {tenant.city}, {tenant.state}
+            </span>
+          </div>
+        </div>
+
+        <div className="clean-modal-footer">
+          <button type="button" className="btn-clean-secondary" onClick={onClose} disabled={loading}>
+            Cancel
+          </button>
+          <button type="button" className="btn-clean-danger" onClick={handleDelete} disabled={loading}>
+            {loading ? 'Deleting...' : 'Delete Business'}
+          </button>
         </div>
       </div>
     </div>
