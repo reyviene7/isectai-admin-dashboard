@@ -26,6 +26,18 @@ npm run dev
 
 Visit **`http://localhost:5173`** in your browser. The application loads with pre-configured mock data reflecting the exact PostgreSQL schema, with full interactivity.
 
+### 🔑 Demo Login Accounts (Pre-Seeded Credentials)
+
+You can log in and test different user roles and tenant isolation boundaries using the following accounts:
+
+| Persona & Role | Email Address | Password | Access Scope |
+| :--- | :--- | :--- | :--- |
+| **👑 Platform Super Admin** | `admin@isectai.internal` | `password123` | Global cross-tenant oversight across all businesses & AI logs |
+| **🏥 Medical Clinic Staff** | `staff@apexdental.com` | `password123` | Scoped strictly to **Apex Dental Care** (Patients & Appointments) |
+| **⚡ Field Trades Dispatcher** | `staff@voltflow.com` | `password123` | Scoped strictly to **VoltFlow Services** (Dispatches & Work Orders) |
+
+> **Quick Tip:** Additional practitioners and technicians (e.g., `dr.vance@apexdentalnyc.com`, `dr.patel@pulsepointcardio.org`, `mike.ross@voltflowservices.com`) are also pre-seeded with password `password123`.
+
 ---
 
 ## 🏛️ Section 2.C Architecture Solutions (Executive & Non-Technical Guide)
