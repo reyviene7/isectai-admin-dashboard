@@ -52,14 +52,14 @@ export const StaffManagementView: React.FC<StaffManagementViewProps> = ({
 
   const isAdmin = currentUser.role === 'platform_admin';
 
-  const staffUsers = users.filter((u) => u.role === 'business_staff');
+  const staffUsers = users.filter((u) => u.role !== 'platform_admin');
   const adminUsers = users.filter((u) => u.role === 'platform_admin');
 
   const effectiveSearch = (searchQuery.trim() || search.trim()).toLowerCase();
 
   const filteredUsers = users.filter((u) => {
     if (filterTenant === 'admin' && u.role !== 'platform_admin') return false;
-    if (filterTenant === 'staff' && u.role !== 'business_staff') return false;
+    if (filterTenant === 'staff' && u.role === 'platform_admin') return false;
     if (filterTenant !== 'all' && filterTenant !== 'admin' && filterTenant !== 'staff' && u.tenant_id !== filterTenant) return false;
 
     if (effectiveSearch) {
@@ -470,7 +470,7 @@ const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const [email, setEmail] = useState(user.email);
   const [title, setTitle] = useState(user.title || '');
   const [phone, setPhone] = useState(user.phone || '');
-  const [role, setRole] = useState<UserRole>(user.role);
+  const [role, setRole] = useState<UserRole>(user.role === 'platform_admin' ? 'platform_admin' : 'business_staff');
   const [selectedTenantId, setSelectedTenantId] = useState<string>(user.tenant_id || tenants[0]?.id || '');
   const [isActive, setIsActive] = useState<boolean>(user.is_active !== false);
   const [password, setPassword] = useState('');
@@ -620,7 +620,7 @@ const EditStaffModal: React.FC<EditStaffModalProps> = ({
             </div>
 
             {/* Assigned Practice / Entity */}
-            {role === 'business_staff' ? (
+            {role !== 'platform_admin' ? (
               <div className="modal-form-group">
                 <label className="modal-label">Assigned Practice / Entity</label>
                 <div className="input-with-icon">

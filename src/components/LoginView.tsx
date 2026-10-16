@@ -115,13 +115,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [legalModalTab, setLegalModalTab] = useState<LegalTab | null>(null);
   const [activeSpotlightIdx, setActiveSpotlightIdx] = useState(0);
 
-  // Auto cycle spotlight every 7 seconds
+  // Auto cycle spotlight every 7 seconds (resets on manual switch for seamless viewing)
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveSpotlightIdx((prev) => (prev + 1) % SPOTLIGHTS.length);
     }, 7000);
     return () => clearInterval(timer);
-  }, []);
+  }, [activeSpotlightIdx]);
 
   // Lock 0 padding and hidden overflow on body during login view
   useEffect(() => {
@@ -205,8 +205,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
       setIsLoading(false);
     }
   };
-
-  const currentSpotlight = SPOTLIGHTS[activeSpotlightIdx];
 
   return (
     <div className="isect-login-viewport">
@@ -393,45 +391,61 @@ export const LoginView: React.FC<LoginViewProps> = ({
         {/* Right Platform Spotlight & Live Telemetry (Desktop Only) */}
         <div className="isect-spotlight-pane">
           <div className="isect-spotlight-card">
-            {/* Spotlight Card Header */}
-            <div className="isect-spotlight-top">
-              <div className="isect-spotlight-category">
-                {currentSpotlight.categoryIcon === 'medical' && <Activity size={13} color="var(--medical-color)" />}
-                {currentSpotlight.categoryIcon === 'dispatch' && <Zap size={13} color="var(--service-color)" />}
-                {currentSpotlight.categoryIcon === 'security' && <Cpu size={13} color="var(--primary)" />}
-                <span>{currentSpotlight.category}</span>
-              </div>
-              <div className="isect-metric-pill">
-                <span>{currentSpotlight.metricHighlight}</span>
-              </div>
-            </div>
-
-            {/* Illuminated Quote */}
-            <div className="isect-quote-body">
-              <div className="isect-quote-mark" aria-hidden="true">
-                “
-              </div>
-              <blockquote className="isect-quote-text">
-                {currentSpotlight.quote}
-              </blockquote>
-            </div>
-
-            {/* Verified Author Card */}
-            <div className="isect-author-card">
+            {/* Sliding Track Viewport */}
+            <div className="isect-spotlight-slider">
               <div
-                className="isect-author-avatar"
-                style={{ background: currentSpotlight.avatarColor }}
+                className="isect-spotlight-track"
+                style={{ transform: `translateX(-${activeSpotlightIdx * 100}%)` }}
               >
-                <span>{currentSpotlight.initials}</span>
-              </div>
-              <div className="isect-author-info">
-                <div className="isect-author-name-row">
-                  <span className="isect-author-name">{currentSpotlight.author}</span>
-                  <span className="isect-verified-tag">✓ Verified Practitioner</span>
-                </div>
-                <span className="isect-author-role">
-                  {currentSpotlight.role} · <strong>{currentSpotlight.organization}</strong>
-                </span>
+                {SPOTLIGHTS.map((spotlight, idx) => (
+                  <div
+                    key={spotlight.id}
+                    className={`isect-spotlight-slide ${idx === activeSpotlightIdx ? 'is-active' : ''}`}
+                    aria-hidden={idx !== activeSpotlightIdx}
+                  >
+                    {/* Spotlight Card Header */}
+                    <div className="isect-spotlight-top">
+                      <div className="isect-spotlight-category">
+                        {spotlight.categoryIcon === 'medical' && <Activity size={13} color="var(--medical-color)" />}
+                        {spotlight.categoryIcon === 'dispatch' && <Zap size={13} color="var(--service-color)" />}
+                        {spotlight.categoryIcon === 'security' && <Cpu size={13} color="var(--primary)" />}
+                        <span>{spotlight.category}</span>
+                      </div>
+                      <div className="isect-metric-pill">
+                        <span>{spotlight.metricHighlight}</span>
+                      </div>
+                    </div>
+
+                    {/* Illuminated Quote */}
+                    <div className="isect-quote-body">
+                      <div className="isect-quote-mark" aria-hidden="true">
+                        “
+                      </div>
+                      <blockquote className="isect-quote-text">
+                        {spotlight.quote}
+                      </blockquote>
+                    </div>
+
+                    {/* Verified Author Card */}
+                    <div className="isect-author-card">
+                      <div
+                        className="isect-author-avatar"
+                        style={{ background: spotlight.avatarColor }}
+                      >
+                        <span>{spotlight.initials}</span>
+                      </div>
+                      <div className="isect-author-info">
+                        <div className="isect-author-name-row">
+                          <span className="isect-author-name">{spotlight.author}</span>
+                          <span className="isect-verified-tag">✓ Verified Practitioner</span>
+                        </div>
+                        <span className="isect-author-role">
+                          {spotlight.role} · <strong>{spotlight.organization}</strong>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
