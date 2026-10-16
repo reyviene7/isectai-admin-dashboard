@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 
 // Middleware to eliminate stale PWA 404s and instruct browser to clean up zombie Service Workers
 const stalePwaCleanupPlugin = (): Plugin => ({
@@ -35,23 +35,7 @@ const stalePwaCleanupPlugin = (): Plugin => ({
 });
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  const supabaseTarget = (env.VITE_SUPABASE_URL || 'https://vdymolgtrovtekodhnik.supabase.co').trim();
-
-  return {
-    server: {
-      proxy: {
-        // Reverse proxy to mask direct cloud API URLs and eliminate CORS preflight requests
-        '/api/cloud': {
-          target: supabaseTarget,
-          changeOrigin: true,
-          secure: true,
-          rewrite: (path) => path.replace(/^\/api\/cloud/, '')
-        }
-      }
-    },
-    plugins: [react(), stalePwaCleanupPlugin()]
-  };
+export default defineConfig({
+  plugins: [react(), stalePwaCleanupPlugin()]
 });
 

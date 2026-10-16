@@ -30,10 +30,9 @@ export function getStoredSupabaseConfig() {
   const rawUrl = isEnvValid ? envUrl : (isLocalValid ? localUrl : (envUrl || localUrl));
   const anonKey = isEnvValid ? envKey : (isLocalValid ? localKey : (envKey || localKey));
 
-  // In browser, route requests through same-origin reverse proxy /api/cloud
-  // to mask the raw Supabase URL and eliminate CORS preflight requests in the Network tab
-  const isBrowser = typeof window !== 'undefined' && Boolean(window.location?.origin);
-  const url = isBrowser ? `${window.location.origin}/api/cloud` : rawUrl;
+  // Connect directly to the cloud Supabase URL
+  // Ensures REST queries and Realtime WebSockets succeed natively on Vercel without 404 proxy issues
+  const url = rawUrl;
 
   const isConfigured = Boolean(
     rawUrl &&
